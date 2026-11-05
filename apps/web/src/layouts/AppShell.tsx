@@ -17,7 +17,8 @@ import { CitizenPortalView } from '../modules/CitizenPortalView';
 import { ProjectsView } from '../modules/ProjectsView';
 
 // Placeholders for remaining modules in Phase 2
-import { FileText, Box, Bot, BarChart3 } from 'lucide-react';
+import { PermitsView } from '../modules/PermitsView';
+import { Box, Bot, BarChart3 } from 'lucide-react';
 
 export const AppShell: React.FC = () => {
   const store = useTerranovaStore();
@@ -134,19 +135,14 @@ export const AppShell: React.FC = () => {
           )}
 
           {store.currentModule === 'permits' && (
-            <div className="flex-1 p-6 overflow-y-auto space-y-4 gis-grid-bg">
-              <div className="bg-terranova-900/90 border border-terranova-700 p-4 rounded-2xl shadow-panel-dark">
-                <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-sky-400" />
-                  Módulo 07: TERRANOVA PERMITS — Permisos y Expedientes Urbanos
-                </h2>
-                <p className="text-xs text-gray-400">Gestión digital de licencias de uso de suelo, alineamiento y número oficial, y licencias de obra.</p>
-              </div>
-              <div className="p-4 rounded-xl bg-terranova-900 border border-terranova-800 text-xs text-gray-300">
-                <span className="font-mono text-terranova-400 font-bold block mb-1">VENTANILLA ÚNICA DIGITAL CATASTRAL</span>
-                <p>32 expedientes en revisión técnica por peritos del municipio.</p>
-              </div>
-            </div>
+            <PermitsView
+              permits={store.permits}
+              onSelectPermit={(_p) => store.setSelectedEntity({ type: 'property', data: null })}
+              onFocusMap={handleFocusMap}
+              onAddPermit={store.addPermit}
+              onReviewPermit={store.reviewPermit}
+              onUpdateRequirement={store.updateRequirementStatus}
+            />
           )}
 
           {store.currentModule === 'citizen' && (

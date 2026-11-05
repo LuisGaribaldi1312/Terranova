@@ -3,6 +3,40 @@ Todas las modificaciones notables a este proyecto se documentarán en este archi
 
 ---
 
+## [1.10.0-phase.11] — 2026-11-05
+### Agregado
+- **Módulo de Permisos Urbanos, Expedientes Digitales y Ventanilla Única (Fase 11 — TERRANOVA PERMITS)**:
+  - Base de Datos & Migraciones:
+    - Migración `database/migrations/007_urban_permits.sql`:
+      - Creación de tabla `urban_permits` para gestión de expedientes urbanos y licencias con folio oficial (`LIC-TIPO-YYYY-XXXXX`), tipo de trámite (`OBRA_MAYOR`, `OBRA_MENOR`, `USO_SUELO`, `ALINEAMIENTO_NUMERO_OFICIAL`, `SUBDIVISION`, `DEMOLICION`), estatus de zonificación PDU (`COMPATIBLE`, `CONDICIONADO`, `INCOMPATIBLE`), coeficientes COS y CUS, datos del solicitante y Director Responsable de Obra (DRO), coordenadas georreferenciadas y sellado digital criptográfico SHA-256.
+      - Creación de tabla `permit_requirements` para checklist documental oficial (Escritura pública, boleta predial al corriente, memoria de cálculo estructural DRO, estudio de mecánica de suelos, MIA, etc.) con validación binaria de obligatoriedad y estatus de revisión pericial.
+      - Políticas PostgreSQL RLS y triggers de actualización automática para auditoría inmutable.
+  - Backend NestJS (`apps/api/src/permits/`):
+    - DTOs fuertemente tipados: `CreatePermitDto`, `ReviewPermitDto` y `UpdateRequirementDto`.
+    - Servicio pericial `PermitsService` con lógica de asignación de vigencias reglamentarias (24 meses obra mayor, 12 meses obra menor y usos), generación determinista de sello digital SHA-256 de licencias, y verificación de compatibilidad de zonificación PDU.
+    - Endpoints REST documentados en OpenAPI: `GET /permits`, `GET /permits/stats` (KPIs por tipo y estatus), `GET /permits/:id` (expediente completo con checklist documental e historial de dictámenes), `POST /permits`, `PATCH /permits/:id/review` y `PATCH /permits/:id/requirements/:reqId`.
+    - Módulo `PermitsModule` registrado en `apps/api/src/app.module.ts`.
+  - Frontend React & Ventanilla Única Digital (`apps/web/src/modules/PermitsView.tsx`):
+    - Tablero ejecutivo con KPIs en tiempo real: Expedientes Activos, Licencias Emitidas, En Revisión Técnica y Tasa de Rechazo/Incompatibilidad PDU.
+    - **Doble Modo de Visualización**:
+      - Tablero Kanban interactivo organizado en 4 columnas de flujo normativo: `Ingresados`, `Revisión Técnica / DRO`, `Requiere Subsanación` y `Autorizados / Emitidos`.
+      - Vista de Tabla Administrativa de alta densidad para análisis y filtrado multi-criterio (tipo de trámite, compatibilidad PDU y buscador por folio/DRO/solicitante).
+    - **Modal de Dictamen Pericial Urbano**:
+      - Checklist interactivo de requisitos documentales donde el perito puede aprobar o rechazar cada documento en tiempo real.
+      - Evaluación de compatibilidad con el Programa de Desarrollo Urbano (PDU).
+      - Emisión de resolución vinculante (`AUTORIZAR`, `REQUERIR SUBSANACIÓN`, `RECHAZAR`) con notas periciales.
+    - **Cédula Oficial de Licencia de Construcción e Impresión**:
+      - Generación de Cédula de Licencia Oficial con Escudo Institucional, datos catastrales, coeficientes COS/CUS, firma del DRO, vigencia reglamentaria, Código QR de validación y Sello Digital SHA-256 inmutable.
+    - **Modal de Nuevo Trámite Urbano**:
+      - Alta de solicitudes con asignación automática de folio normativo, clave catastral asociada, cálculo de derechos y requisitos preconfigurados.
+    - Integración en el shell de navegación principal (`AppShell.tsx`) y persistencia reactiva en `useTerranovaStore.ts`.
+  - Pruebas Unitarias y Certificación de Calidad:
+    - Suite de pruebas en `tests/unit/permits-expedientes.test.ts` con validación de nomenclatura oficial de folios, cálculo de coeficientes de ocupación (COS/CUS), vigencias reglamentarias, sello digital criptográfico SHA-256 y cumplimiento de requisitos mandatorios (34/34 tests aprobados al 100%).
+  - Despliegue en Producción:
+    - Despliegue verificado en Vercel Production con código HTTP 200 en `https://terranova-mx.vercel.app`.
+
+---
+
 ## [1.9.0-phase.10] — 2026-11-05
 ### Agregado
 - **Módulo de Obras Públicas, Curva S y Estimaciones (Fase 10 — TERRANOVA PROJECTS)**:

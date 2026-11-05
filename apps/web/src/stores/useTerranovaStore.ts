@@ -1,6 +1,25 @@
 import { useState, useEffect } from 'react';
-import { ModuleId, Organization, LayerItem, PropertyItem, IncidentItem, ProjectItem, ProjectEstimation } from '../types';
-import { MOCK_ORGANIZATIONS, MOCK_LAYERS, MOCK_PROPERTIES, MOCK_INCIDENTS, MOCK_PROJECTS, MOCK_KPIS, MOCK_INFRASTRUCTURE } from './mockData';
+import {
+  ModuleId,
+  Organization,
+  LayerItem,
+  PropertyItem,
+  IncidentItem,
+  ProjectItem,
+  ProjectEstimation,
+  PermitItem,
+  PermitRequirement,
+} from '../types';
+import {
+  MOCK_ORGANIZATIONS,
+  MOCK_LAYERS,
+  MOCK_PROPERTIES,
+  MOCK_INCIDENTS,
+  MOCK_PROJECTS,
+  MOCK_KPIS,
+  MOCK_INFRASTRUCTURE,
+  MOCK_PERMITS,
+} from './mockData';
 
 export function useTerranovaStore() {
   const [currentModule, setCurrentModule] = useState<ModuleId>('dashboard');
@@ -18,6 +37,9 @@ export function useTerranovaStore() {
 
   // Projects & Public Works State
   const [projects, setProjects] = useState<ProjectItem[]>(MOCK_PROJECTS);
+
+  // Urban Permits & Expedientes State
+  const [permits, setPermits] = useState<PermitItem[]>(MOCK_PERMITS);
 
   // Selection for Inspector Panel
   const [selectedEntity, setSelectedEntity] = useState<{
@@ -149,7 +171,6 @@ export function useTerranovaStore() {
             })
           : [];
 
-        // Si se pagó, actualizamos el presupuesto ejercido y avance financiero
         let newExercised = p.budgetExercised;
         if (status === 'PAID') {
           const est = p.estimations?.find((e) => e.estimationNumber === estimationNumber);
@@ -163,6 +184,86 @@ export function useTerranovaStore() {
           budgetExercised: newExercised,
           financialProgress: newFinancialProgress,
           estimations: currentEstimations,
+        };
+      })
+    );
+  };
+
+  // Permits Actions
+  const addPermit = (newPermit: PermitItem) => {
+    setPermits((prev) => [newPermit, ...prev]);
+    setNotifications((prev) => [
+      {
+        id: Date.now().toString(),
+        title: `Nuevo Expediente Digital: ${newPermit.folio}`,
+        desc: `${newPermit.permitType} (${newPermit.cadastralKey})`,
+        time: 'Justo ahora',
+        unread: true,
+      },
+      ...prev,
+    ]);
+  };
+
+  const reviewPermit = (
+    permitId: string,
+    status: PermitItem['status'],
+    notes: string,
+    zoning?: PermitItem['zoningComplianceStatus']
+  ) => {
+    setPermits((prev) =>
+      prev.map((p) => {
+        if (p.id !== permitId) return p;
+        const history = [...p.history];
+        history.push({
+          date: new Date().toISOString(),
+          status,
+          note: notes,
+          author: 'Dirección de Desarrollo Urbano',
+        });
+
+        let issuedAt = p.issuedAt;
+        let expiresAt = p.expiresAt;
+        let seal = p.officialDigitalSeal;
+        let qr = p.qrVerificationCode;
+
+        if (status === 'Aprobado y Sellado' && !seal) {
+          issuedAt = new Date().toISOString();
+          const exp = new Date();
+          exp.setMonth(exp.getMonth() + 24);
+          expiresAt = exp.toISOString();
+          seal = 'c4e7f9a2b1d3085694a1209384756abcdef8901234567fedcba98765432101234';
+          qr = `VERIF-LIC-${p.folio}`;
+        }
+
+        return {
+          ...p,
+          status,
+          zoningComplianceStatus: zoning || p.zoningComplianceStatus,
+          technicalNotes: notes,
+          history,
+          issuedAt,
+          expiresAt,
+          officialDigitalSeal: seal,
+          qrVerificationCode: qr,
+        };
+      })
+    );
+  };
+
+  const updateRequirementStatus = (
+    permitId: string,
+    reqId: string,
+    status: PermitRequirement['status']
+  ) => {
+    setPermits((prev) =>
+      prev.map((p) => {
+        if (p.id !== permitId) return p;
+        const requirements = p.requirements.map((r) =>
+          r.id === reqId ? { ...r, status } : r
+        );
+        return {
+          ...p,
+          requirements,
         };
       })
     );
@@ -198,6 +299,11 @@ export function useTerranovaStore() {
     addProject,
     addEstimation,
     updateEstimationStatus,
+    permits,
+    setPermits,
+    addPermit,
+    reviewPermit,
+    updateRequirementStatus,
     infrastructureAssets: MOCK_INFRASTRUCTURE,
   };
 }

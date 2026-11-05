@@ -201,3 +201,53 @@ export interface MaintenanceLogItem {
   performedBy: string;
   notes: string;
 }
+
+export interface PermitRequirement {
+  id: string;
+  documentName: string;
+  isMandatory: boolean;
+  status: 'PENDIENTE' | 'VALIDADO' | 'OBSERVADO';
+  fileUrl?: string;
+}
+
+export interface PermitHistoryItem {
+  date: string;
+  status: string;
+  note: string;
+  author: string;
+}
+
+export interface PermitItem {
+  id: string;
+  folio: string;
+  permitType: string;
+  cadastralKey: string;
+  propertyAddress: string;
+  neighborhood: string;
+  applicantName: string;
+  applicantRfc?: string;
+  applicantPhone?: string;
+  applicantEmail?: string;
+  droName?: string;
+  droLicenseNumber?: string;
+  projectDescription: string;
+  proposedBuiltAreaM2: number;
+  levelsCount: number;
+  pduZoneClassification: string;
+  zoningComplianceStatus: 'COMPATIBLE' | 'CONDICIONADO' | 'INCOMPATIBLE';
+  status:
+    | 'Ingresado'
+    | 'En Revisión Técnica'
+    | 'Prevención / Observaciones'
+    | 'Dictamen Favorable'
+    | 'Aprobado y Sellado'
+    | 'Rechazado';
+  officialDigitalSeal?: string;
+  qrVerificationCode?: string;
+  technicalNotes?: string;
+  issuedAt?: string;
+  expiresAt?: string;
+  coordinates: [number, number];
+  requirements: PermitRequirement[];
+  history: PermitHistoryItem[];
+}

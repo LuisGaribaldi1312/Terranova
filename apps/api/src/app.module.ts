@@ -12,6 +12,7 @@ import { ProjectsModule } from './projects/projects.module';
 import { SyncModule } from './sync/sync.module';
 import { GisModule } from './gis/gis.module';
 import { CitizenModule } from './citizen/citizen.module';
+import { PermitsModule } from './permits/permits.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { CitizenModule } from './citizen/citizen.module';
     SyncModule,
     GisModule,
     CitizenModule,
+    PermitsModule,
   ],
 })
 export class AppModule {}
