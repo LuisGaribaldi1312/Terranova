@@ -1,0 +1,30 @@
+import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { CommonModule } from './common/common.module';
+import { OrganizationsModule } from './organizations/organizations.module';
+import { TerritoriesModule } from './territories/territories.module';
+import { PropertiesModule } from './properties/properties.module';
+import { IncidentsModule } from './incidents/incidents.module';
+import { InfrastructureModule } from './infrastructure/infrastructure.module';
+import { ProjectsModule } from './projects/projects.module';
+import { SyncModule } from './sync/sync.module';
+import { GisModule } from './gis/gis.module';
+
+@Module({
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: ['.env', '.env.local'],
+    }),
+    CommonModule,
+    OrganizationsModule,
+    TerritoriesModule,
+    PropertiesModule,
+    IncidentsModule,
+    InfrastructureModule,
+    ProjectsModule,
+    SyncModule,
+    GisModule,
+  ],
+})
+export class AppModule {}
