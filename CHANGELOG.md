@@ -3,6 +3,25 @@ Todas las modificaciones notables a este proyecto se documentarán en este archi
 
 ---
 
+## [1.1.0-phase.2] — 2026-11-05
+### Agregado
+- **Diseño UX/UI, Sistema de Diseño y Shell de la Aplicación (Fase 02)**.
+- Scaffolding completo de `apps/web` con React 18, TypeScript (strict: true), Vite 5 y Tailwind CSS.
+- Tokens visuales empresariales: Azul profundo (`#0B1D2A`), Azul petróleo (`#123C50`), Verde tecnológico (`#17A987`) y Gris claro (`#E9F0F2`).
+- Shell interactivo completo (`AppShell.tsx`):
+  - Encabezado (`Header.tsx`): Selector de municipio/organización de México, buscador global, alternador de tema claro/oscuro, centro de notificaciones y simulador de desconexión offline.
+  - Barra lateral (`Sidebar.tsx`): Navegación agrupada por los 12 módulos funcionales con estados activos y colapso responsive.
+  - Barra de estado (`StatusBar.tsx`): Lectura en tiempo real de coordenadas geográficas (WGS84 y UTM 14N) y monitor de IndexedDB / Dexie.js.
+  - Panel Inspector lateral (`RightInspector.tsx`): Fichas técnicas completas para Predios (con Cédula Catastral), Incidencias (con evidencias fotográficas) y Obras Públicas.
+- Módulos visuales operativos:
+  - `DashboardView.tsx`: Tarjetas de KPI ejecutivos, visor cartográfico interactivo vectorial, actividad territorial en vivo y tabla multidominio.
+  - `GisExplorerView.tsx`: Visor GIS con gestor de capas, herramientas de medición métrica (`EPSG:6362`) y descarga de paquetes offline.
+  - `PropertiesView.tsx`: Catastro con búsqueda por Clave Catastral, filtros por uso de suelo y métricas consolidadas.
+  - `IncidentsView.tsx`: Mesa de control con semáforo de prioridades y evidencias de campo.
+  - `FieldPwaView.tsx`: Simulador interactivo de la PWA móvil de campo con almacenamiento local y cola de sincronización.
+  - `AdminView.tsx`: Consola de configuración de tenant, seguridad PostgreSQL RLS y bitácora forense de auditoría inmutable.
+- Compilación de producción validada exitosamente con `tsc -b && vite build` (Cero errores de TypeScript).
+
 ## [1.0.0-phase.1] — 2026-11-05
 ### Agregado
 - **Fundación Arquitectónica y Definición de Producto (Fase 01)**.
