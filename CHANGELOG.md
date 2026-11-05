@@ -3,6 +3,38 @@ Todas las modificaciones notables a este proyecto se documentarán en este archi
 
 ---
 
+## [1.4.0-phase.5] — 2026-11-05
+### Agregado
+- **Módulo GIS Explorer Core Completo (Fase 05)** con motor MapLibre GL JS, capas dinámicas y herramientas geoespaciales avanzadas.
+- Integración de MapLibre GL JS en `apps/web/src/maps/MapLibreMap.tsx`:
+  - Visualizador cartográfico acelerado por GPU (WebGL/WebGPU) con soporte 2D y 3D (pitch y bearing).
+  - Proveedores cartográficos intercambiables:
+    - Cartografía Urbana / OpenStreetMap oficial (OGC Tiles).
+    - Satelital de Alta Resolución (Esri World Imagery / Maxar).
+    - Modo Oscuro de Alto Contraste (Carto Dark Matter GL).
+  - Controles de navegación nativos con brújula y escala métrica en pantalla.
+- Utilidades de Cálculo Espacial Oficial en `apps/web/src/maps/spatialMath.ts`:
+  - Distancia geodésica oficial de alta precisión calculada con el elipsoide GRS80 / WGS84 oficial para la República Mexicana.
+  - Proyección conforme simplificada a UTM Zona 14N (`EPSG:32614`) para mediciones submétricas en el centro y sur de México.
+  - Cálculo de áreas y perímetros de polígonos mediante el Teorema de Gauss / Shoelace en metros cuadrados ($m^2$) y hectáreas ($ha$).
+  - Validador de topología geométrica `isValidPolygon` para prevenir polígonos degenerados o autointersecados.
+- Herramientas Interactivas en `apps/web/src/modules/GisExplorerView.tsx`:
+  - Selector de herramientas de mapa: Paneo/Inspección, Medición de Distancia Geodésica, Medición de Área y Dibujo de Polígonos Catastrales.
+  - Capas temáticas en tiempo real:
+    - Predios Catastrales Urbanos con simbología cromática según uso de suelo (Habitacional, Comercial, Industrial, Equipamiento).
+    - Infraestructura Crítica Urbana (red de agua potable, luminarias LED, drenaje pluvial).
+    - Incidencias Viales y Reportes Ciudadanos con marcador de severidad cromática (Alta, Media, Baja).
+    - Capa digital de Terreno / Relieve sombreado.
+  - Exportación de paquetes cartográficos municipales a formato GeoJSON para uso offline o integración con software GIS de escritorio (QGIS, ArcGIS).
+  - Integración bidireccional con el Inspector Lateral (`RightInspector`): al hacer clic en cualquier predio o incidente, el mapa enfoca y muestra los metadatos catastrales o la ficha de la incidencia.
+  - Filtros reactivos por uso de suelo y severidad.
+- Pruebas y Despliegue:
+  - Pruebas unitarias de cálculo geodésico y proyecciones en `tests/unit/spatial-math.test.ts`.
+  - Compilación verificada con TypeScript (`strict: true`) en ambos paquetes (`apps/api` y `apps/web`).
+  - Despliegue en producción en Vercel activo y verificado en `https://web-nine-lime-81.vercel.app`.
+
+---
+
 ## [1.3.0-phase.4] — 2026-11-05
 ### Agregado
 - **Autenticación Robusta, Roles (RBAC), MFA y Aislamiento Multi-Tenant (Fase 04)**.
