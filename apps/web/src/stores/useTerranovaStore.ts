@@ -13,6 +13,9 @@ export function useTerranovaStore() {
   // GIS Layers
   const [layers, setLayers] = useState<LayerItem[]>(MOCK_LAYERS);
   
+  // Incidents Reactive State
+  const [incidents, setIncidents] = useState<IncidentItem[]>(MOCK_INCIDENTS);
+
   // Selection for Inspector Panel
   const [selectedEntity, setSelectedEntity] = useState<{
     type: 'property' | 'incident' | 'project' | null;
@@ -54,6 +57,48 @@ export function useTerranovaStore() {
     });
   };
 
+  const addIncident = (newInc: IncidentItem) => {
+    setIncidents((prev) => [newInc, ...prev]);
+    setNotifications((prev) => [
+      {
+        id: Date.now().toString(),
+        title: `Nueva Incidencia ${newInc.folio}`,
+        desc: `${newInc.type}: ${newInc.title} en ${newInc.neighborhood}`,
+        time: 'Justo ahora',
+        unread: true,
+      },
+      ...prev,
+    ]);
+  };
+
+  const updateIncidentStatus = (
+    id: string,
+    status: IncidentItem['status'],
+    crewName?: string,
+    notes?: string
+  ) => {
+    setIncidents((prev) =>
+      prev.map((inc) => {
+        if (inc.id !== id) return inc;
+        const history = inc.history ? [...inc.history] : [];
+        if (notes) {
+          history.push({
+            date: new Date().toISOString(),
+            status,
+            note: notes,
+            author: 'Despacho Central de Guardia',
+          });
+        }
+        return {
+          ...inc,
+          status,
+          assignedCrew: crewName || inc.assignedCrew,
+          history,
+        };
+      })
+    );
+  };
+
   return {
     currentModule,
     setCurrentModule,
@@ -75,7 +120,10 @@ export function useTerranovaStore() {
     kpis: MOCK_KPIS,
     organizations: MOCK_ORGANIZATIONS,
     properties: MOCK_PROPERTIES,
-    incidents: MOCK_INCIDENTS,
+    incidents,
+    setIncidents,
+    addIncident,
+    updateIncidentStatus,
     projects: MOCK_PROJECTS,
     infrastructureAssets: MOCK_INFRASTRUCTURE,
   };

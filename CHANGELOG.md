@@ -3,6 +3,33 @@ Todas las modificaciones notables a este proyecto se documentarán en este archi
 
 ---
 
+## [1.7.0-phase.8] — 2026-11-05
+### Agregado
+- **Módulo de Incidencias Urbanas y Mesa de Control de Despacho (Fase 08)**:
+  - Base de Datos & Migraciones:
+    - Migración `database/migrations/004_incidents_dispatch.sql`:
+      - Ampliación de `citizen_incidents` con soporte integral de SLA (`sla_hours`, `sla_deadline`, `is_sla_breached`), canales de origen (`Línea 072`, `App Móvil`, `Portal Web`, `Ventanilla`), datos de contacto de reportante, asignación de cuadrilla técnica y notas de resolución técnica.
+      - Creación de tabla inmutable `incident_updates` con RLS multi-tenant para auditoría de transiciones de estado y bitácora técnica de campo.
+      - Índices espaciales GIST sobre georreferenciación `location` e índices B-Tree sobre `sla_deadline`, `status`, `priority` y `folio`.
+  - Backend NestJS (`apps/api/src/incidents/`):
+    - DTOs tipados: `CreateIncidentDto` y `UpdateStatusDto` con validación bidireccional.
+    - Servicio de Despacho Operativo con cálculo automático de SLA según prioridad (Crítica 4h, Alta 24h, Media 72h, Baja 120h), generación de folio municipal consecutivo `INC-YYYY-XXXXXX` y detección de retraso temporal.
+    - Endpoints `GET /incidents`, `GET /incidents/stats`, `GET /incidents/:id`, `POST /incidents`, `PATCH /incidents/:id/status`.
+  - Frontend React & Mesa de Control (`apps/web/src/modules/IncidentsView.tsx`):
+    - Tablero Kanban operativo interactivo con 5 columnas del flujo de trabajo municipal (`Recibida`, `Validada`, `Asignada`, `En Proceso`, `Resuelta`).
+    - Vista tabular detallada con ordenamiento y filtros por prioridad, tipo de falla y búsqueda de texto.
+    - Panel de Métricas en Tiempo Real: Total incidencias, cuadrillas activas, resueltas, críticas pendientes, SLA en riesgo y tasa global de cumplimiento de SLA.
+    - Modal de Detalle y Despacho Operativo con asignación de cuadrillas especializadas, actualización de estado, notas técnicas y visualización de evidencia fotográfica antes/después.
+    - Modal de Reporte de Nueva Incidencia con geocodificación, cálculo de SLA y generación automática de folio oficial.
+    - Conexión reactiva en `useTerranovaStore.ts` (`addIncident`, `updateIncidentStatus`).
+  - Pruebas y Certificación:
+    - Suite de pruebas unitarias en `tests/unit/incidents-dispatch.test.ts` con validación de folios, matriz de SLA, detección de retrasos y bitácora.
+    - Configuración del test runner unificado en `tests/runner.cjs` y script en `package.json` (19/19 tests unitarios aprobados al 100%).
+  - Despliegue en Producción:
+    - Despliegue verificado en Vercel Production con código HTTP 200 en `https://terranova-mx.vercel.app`.
+
+---
+
 ## [1.6.0-phase.7] — 2026-11-05
 ### Agregado
 - **Módulo de Infraestructura Urbana y Activos de Red (Fase 07)**:

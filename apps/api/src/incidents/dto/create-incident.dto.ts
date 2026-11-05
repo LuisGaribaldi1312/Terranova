@@ -7,7 +7,10 @@ export class CreateIncidentDto {
   @IsString()
   title: string;
 
-  @ApiProperty({ example: 'Bache', enum: ['Bache', 'Fuga de Agua', 'Alumbrado', 'Basura', 'Señalización'] })
+  @ApiProperty({ 
+    example: 'Bache', 
+    enum: ['Bache', 'Fuga de Agua', 'Alumbrado', 'Drenaje Obstruido', 'Basura', 'Señalización', 'Poda y Arbolado'] 
+  })
   @IsNotEmpty()
   @IsString()
   incidentType: string;
@@ -16,15 +19,40 @@ export class CreateIncidentDto {
   @IsEnum(['Baja', 'Media', 'Alta', 'Crítica'])
   priority: 'Baja' | 'Media' | 'Alta' | 'Crítica';
 
-  @ApiProperty({ example: 'Existe riesgo para vehículos de alta velocidad' })
+  @ApiProperty({ example: 'Existe riesgo para vehículos y peatones en el cruce' })
   @IsNotEmpty()
   @IsString()
   description: string;
 
-  @ApiProperty({ example: 'Col. La Paz, frente a Farmacia Guadalajara' })
+  @ApiProperty({ example: 'Av. Juárez 2108' })
+  @IsOptional()
+  @IsString()
+  street?: string;
+
+  @ApiProperty({ example: 'Col. La Paz' })
+  @IsOptional()
+  @IsString()
+  neighborhood?: string;
+
+  @ApiProperty({ example: 'Frente a Farmacia Guadalajara' })
   @IsOptional()
   @IsString()
   addressReference?: string;
+
+  @ApiProperty({ example: 'Lic. Fernando Gómez' })
+  @IsOptional()
+  @IsString()
+  citizenName?: string;
+
+  @ApiProperty({ example: '222-345-6789' })
+  @IsOptional()
+  @IsString()
+  citizenPhone?: string;
+
+  @ApiProperty({ example: 'PORTAL', enum: ['PORTAL', 'FIELD_PWA', 'CALL_CENTER_072', 'SOCIAL_MEDIA'] })
+  @IsOptional()
+  @IsString()
+  sourceChannel?: string;
 
   @ApiProperty({ example: -98.2250, description: 'Longitud WGS84' })
   @IsNotEmpty()

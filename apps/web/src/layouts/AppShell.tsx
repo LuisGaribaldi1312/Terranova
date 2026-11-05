@@ -94,6 +94,8 @@ export const AppShell: React.FC = () => {
               incidents={store.incidents}
               onSelectIncident={(i) => store.setSelectedEntity({ type: 'incident', data: i })}
               onFocusMap={handleFocusMap}
+              onAddIncident={store.addIncident}
+              onUpdateStatus={store.updateIncidentStatus}
             />
           )}
 

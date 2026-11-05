@@ -81,12 +81,39 @@ export interface IncidentItem {
   id: string;
   folio: string;
   title: string;
-  type: 'Bache' | 'Fuga de Agua' | 'Alumbrado' | 'Basura' | 'Señalización';
+  type: string;
   priority: 'Baja' | 'Media' | 'Alta' | 'Crítica';
   status: 'Recibida' | 'Validada' | 'Asignada' | 'En Proceso' | 'Resuelta' | 'Cerrada';
+  description?: string;
+  street?: string;
   neighborhood: string;
+  citizenName?: string;
+  citizenPhone?: string;
+  sourceChannel?: 'Portal Web' | 'PWA Campo' | 'Línea 072' | 'Redes Sociales';
   reportedAt: string;
   assignedDept: string;
+  assignedCrew?: string;
+  slaHours?: number;
+  slaDeadline?: string;
+  isSlaBreached?: boolean;
+  evidenceBeforeUrl?: string;
+  evidenceAfterUrl?: string;
+  resolutionNotes?: string;
+  resolvedAt?: string;
+  originChannel?: string;
+  evidences?: Array<{
+    id: string;
+    url: string;
+    caption: string;
+    stage: 'before' | 'after';
+    uploadedAt: string;
+  }>;
+  history?: Array<{
+    date: string;
+    status: string;
+    note: string;
+    author: string;
+  }>;
   coordinates: [number, number];
 }
 
@@ -112,7 +139,6 @@ export interface LayerItem {
   count: number;
   color: string;
 }
-
 
 export interface InfrastructureAssetItem {
   id: string;
