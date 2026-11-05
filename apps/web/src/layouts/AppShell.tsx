@@ -18,7 +18,8 @@ import { ProjectsView } from '../modules/ProjectsView';
 
 // Placeholders for remaining modules in Phase 2
 import { PermitsView } from '../modules/PermitsView';
-import { Box, Bot, BarChart3 } from 'lucide-react';
+import { AnalyticsView } from '../modules/AnalyticsView';
+import { Box, Bot } from 'lucide-react';
 
 export const AppShell: React.FC = () => {
   const store = useTerranovaStore();
@@ -179,15 +180,11 @@ export const AppShell: React.FC = () => {
           )}
 
           {store.currentModule === 'analytics' && (
-            <div className="flex-1 p-6 overflow-y-auto space-y-4 gis-grid-bg">
-              <div className="bg-terranova-900/90 border border-terranova-700 p-4 rounded-2xl shadow-panel-dark">
-                <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                  <BarChart3 className="w-5 h-5 text-terranova-400" />
-                  Módulo 08: TERRANOVA ANALYTICS — Tableros e Inteligencia Espacial
-                </h2>
-                <p className="text-xs text-gray-400">Mapas de calor (Heatmaps) de concentración de reportes y tiempos medios de atención por colonia.</p>
-              </div>
-            </div>
+            <AnalyticsView
+              incidents={store.incidents}
+              properties={store.properties}
+              onFocusMap={handleFocusMap}
+            />
           )}
         </main>
 

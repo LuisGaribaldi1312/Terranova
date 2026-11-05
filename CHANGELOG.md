@@ -3,6 +3,31 @@ Todas las modificaciones notables a este proyecto se documentarán en este archi
 
 ---
 
+## [1.12.0-phase.13] — 2026-11-05
+### Agregado
+- **Módulo de Inteligencia Territorial, Mapas de Calor y Business Intelligence (Fase 13 — TERRANOVA ANALYTICS & BI)**:
+  - Base de Datos & Migraciones:
+    - Migración `database/migrations/009_analytics_views.sql`:
+      - Creación de tabla `analytics_neighborhood_metrics` para consolidación periódica de indicadores de rendimiento urbano, MTTR, índice de salud territorial e inversión por colonia con políticas RLS multi-tenant.
+      - Función PostGIS `get_spatial_heatmap_grid` optimizada para agregación y bucketización espacial acelerada por índices GiST.
+  - Backend NestJS (`apps/api/src/analytics/`):
+    - DTOs con validación: `AnalyticsQueryDto`, `HeatmapQueryDto` y `ExportReportDto`.
+    - Servicio `AnalyticsService` con cálculo de indicadores estratégicos (MTTR medio en horas, cumplimiento normativo de SLA %, Índice de Salud Urbana UHI consolidado), cuadrícula térmica espacial con ponderación gaussiana y generación de dictámenes ejecutivos con Sello Digital SHA-256 inmutable.
+    - Controlador `AnalyticsController` con endpoints OpenAPI: `GET /analytics/kpis`, `GET /analytics/heatmap`, `GET /analytics/neighborhoods`, `GET /analytics/crews` y `POST /analytics/export`.
+    - Módulo `AnalyticsModule` registrado en `apps/api/src/app.module.ts`.
+  - Frontend React & Tablero de Comando Estratégico (`apps/web/src/modules/AnalyticsView.tsx`):
+    - 4 KPIs estratégicos superiores: MTTR Promedio (14.2 hrs), Cumplimiento SLA (87.8%), Índice UHI (88.4/100) y Costo de Mantenimiento ($3.45M MXN).
+    - **Renderizador de Mapa de Calor Espacial (Heatmap)** interactivo en SVG con difuminado térmico gaussiano, resolución ajustable (250m, 500m, 1000m), cuadrantes viales de Puebla y tooltips dinámicos con enfoque en mapa GIS.
+    - Gráfica interactiva de barras y líneas para evolución mensual de incidencias reportadas vs resueltas y curva de reducción de MTTR.
+    - Tabla de clasificación territorial de colonias con semaforización de estado (`EXCELENTE`, `BUENO`, `ATENCIÓN`, `CRÍTICO`).
+    - Desglose de eficiencia y tiempos medios de atención por cuadrilla operativa de campo.
+    - Modal de emisión de Informe Ejecutivo Certificado con escudo oficial, firma de autoridad y Sello Digital SHA-256 imprimible en PDF.
+    - Conexión e integración completa en `AppShell.tsx`.
+  - Pruebas Unitarias y Certificación de Calidad:
+    - Suite de pruebas en `tests/unit/analytics-heatmaps.test.ts` con validación del criterio innegociable de aceptación (**agregación espacial sobre 100,000 registros en < 1.5 segundos**), cálculo del MTTR, cómputo del UHI, ponderación térmica de criticidad y sello SHA-256 (44/44 tests aprobados al 100%).
+
+---
+
 ## [1.11.0-phase.12] — 2026-11-05
 ### Agregado
 - **Módulo de Operación en Campo Offline-First, Dexie.js & Sincronización Transaccional (Fase 12 — TERRANOVA FIELD PWA)**:
