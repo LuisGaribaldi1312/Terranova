@@ -3,6 +3,35 @@ Todas las modificaciones notables a este proyecto se documentarán en este archi
 
 ---
 
+## [1.2.0-phase.3] — 2026-11-05
+### Agregado
+- **Backend Modular NestJS, Modelos PostGIS y Servicios Centrales (Fase 03)**.
+- Scaffolding de `apps/api` con NestJS 10, TypeScript estricto y Swagger / OpenAPI 3.0 (`/api/docs`).
+- Migración inicial SQL en `database/migrations/001_initial_schema.sql`:
+  - Activación de extensiones espaciales: `postgis`, `pgcrypto` y `uuid-ossp`.
+  - Tablas operativas: `organizations`, `departments`, `roles`, `permissions`, `role_permissions`, `users`, `organization_members`.
+  - Catálogo territorial nacional INEGI MGN: `territories` (Estados 01-32, Municipios, Localidades, Colonias y AGEBs con geometría `MultiPolygon, 4326` e índice GIST).
+  - Capas temáticas GIS: `map_layers` y `geographic_features`.
+  - Catastro municipal: `properties` con clave catastral mexicana, uso de suelo, áreas m², geometría `Polygon, 4326`, índice GIST y cálculo métrico dinámico en `EPSG:6362` (ITRF2008).
+  - Infraestructura urbana: `infrastructure_assets` con geometrías y atributos JSONB.
+  - Incidencias territoriales: `incidents` con generación automática de folios consecutivos (`INC-YEAR-000000`), prioridades y evidencias.
+  - Obras públicas: `projects` con avance físico y financiero.
+  - Sincronización offline: `sync_operations` con garantía de idempotencia mediante `client_operation_id`.
+  - Auditoría inmutable de grado forense: `audit_logs`.
+  - Políticas forzosas de **PostgreSQL Row Level Security (RLS)** activas en todas las tablas sensibles.
+- Seeds oficiales en `database/seeds/001_initial_seeds.sql` con la organización del *H. Ayuntamiento de Puebla*, direcciones de Catastro e Infraestructura, roles del sistema y predio piloto con polígono WKT validado.
+- Módulos de dominio NestJS implementados:
+  - `CommonModule`: Pool de conexión con ejecutor de consultas transaccionales con contexto de RLS (`SET LOCAL app.current_organization_id = ...`).
+  - `OrganizationsModule`: CRUD de tenants y perfiles municipales.
+  - `TerritoriesModule`: Consulta de las 32 entidades federativas y municipios de México.
+  - `PropertiesModule`: CRUD de predios con validación topológica espacial `ST_IsValid` previa a persistencia.
+  - `IncidentsModule`: Mesa de control, generador de folios y geocodificación.
+  - `InfrastructureModule`: Inventario de activos urbanos.
+  - `ProjectsModule`: Gestión técnica y avance de obra pública.
+  - `SyncModule`: Receptor de lotes de mutaciones capturadas sin internet con validación de idempotencia.
+  - `GisModule`: Cálculo de distancias geodésicas en `EPSG:6362` y capas cartográficas.
+- Compilación de producción backend completada con éxito (`nest build` con cero errores).
+
 ## [1.1.0-phase.2] — 2026-11-05
 ### Agregado
 - **Diseño UX/UI, Sistema de Diseño y Shell de la Aplicación (Fase 02)**.
