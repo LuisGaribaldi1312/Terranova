@@ -3,6 +3,44 @@ Todas las modificaciones notables a este proyecto se documentarán en este archi
 
 ---
 
+## [1.5.0-phase.6] — 2026-11-05
+### Agregado
+- **Módulo de Territorios y Predios: Catastro Avanzado Completo (Fase 06)**.
+- Base de datos y Migraciones:
+  - Migración `database/migrations/002_cadastre_advancement.sql`:
+    - Ampliación de campos catastrales: `property_regime` (Privada, Ejidal, Comunal, Pública, Condominio).
+    - Desglose de avalúo catastral: `land_value_unit_sqm`, `construction_value_unit_sqm`, `land_cadastral_value`, `construction_cadastral_value` y `cadastral_value` total.
+    - Cuadro de linderos y colindancias perimetrales: `boundary_north`, `boundary_south`, `boundary_east` y `boundary_west`.
+    - Estatus fiscal predial y rezago: `tax_status` (Al Corriente, Con Adeudo, Exento), `annual_property_tax` y `tax_debt_amount`.
+    - Folio de cédula oficial `cadastral_certificate_folio` y sello digital criptográfico SHA-256 `digital_stamp`.
+    - Índices optimizados para consulta territorial y recaudatoria.
+- Backend NestJS (`apps/api/src/properties/`):
+  - `CreatePropertyDto` con validación estricta de formato de Clave Catastral Oficial Mexicana (`ENT-MUN-ZON-MAN-PRE-EDI-DEP`) mediante expresión regular oficial.
+  - Validación de topología espacial con `ST_IsValid` previa a inserción.
+  - Generación automática de avalúo catastral y alícuota de impuesto predial anual.
+  - Emisión de Cédula Catastral Oficial con sello criptográfico SHA-256 determinista (`GET /api/v1/properties/:id/cedula`) y extracción de vértices en coordenadas geodésicas (`EPSG:4326`) y proyectadas (`EPSG:32614`).
+  - Endpoint de estadísticas catastrales agregadas (`GET /api/v1/properties/stats`) para tablero municipal.
+- Frontend React & Interfaz Catastral (`apps/web/src/modules/PropertiesView.tsx`):
+  - Tablero de control con métricas en tiempo real: Padrón total, superficie de terreno y construcción, valuación catastral total y rezago predial.
+  - Selector de vista: Cuadrícula de Fichas Catastrales / Tabla Catastral Tabular institucional.
+  - Filtros multi-criterio reactivos: Por Uso de Suelo, Estatus Fiscal (Al Corriente, Con Adeudo) y Régimen Jurídico.
+  - Modal Oficial de **Cédula Catastral Certificada**:
+    - Ficha técnica oficial imprimible (`window.print()`).
+    - Código QR de autenticidad verificable.
+    - Cuadro de linderos y colindancias.
+    - Determinación de avalúo desglosado (suelo y construcción).
+    - Sello digital de autenticidad SHA-256 inmutable.
+    - Exportación de expediente catastral a formato JSON descargable.
+  - Modal de **Alta de Nuevo Predio Catastral**:
+    - Formulario con cálculo de avalúo automático en tiempo real.
+    - Validación y emisión inmediata de Cédula Catastral.
+- Pruebas y Despliegue:
+  - Pruebas unitarias en `tests/unit/cadastre-valuation.test.ts`.
+  - Compilación exitosa en ambos paquetes (`apps/api` y `apps/web`).
+  - Desplegado y sincronizado en Vercel Producción (`https://terranova-mx.vercel.app`).
+
+---
+
 ## [1.4.0-phase.5] — 2026-11-05
 ### Agregado
 - **Módulo GIS Explorer Core Completo (Fase 05)** con motor MapLibre GL JS, capas dinámicas y herramientas geoespaciales avanzadas.
