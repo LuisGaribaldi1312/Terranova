@@ -1,0 +1,54 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --bg-primary: #F4F8F9;
+    --bg-surface: #E9F0F2;
+    --text-primary: #0B1D2A;
+    --text-secondary: #123C50;
+    --border-color: #CBDCE1;
+  }
+
+  .dark {
+    --bg-primary: #0B1D2A;
+    --bg-surface: #123C50;
+    --text-primary: #E9F0F2;
+    --text-secondary: #9DB4C0;
+    --border-color: #1A4F68;
+  }
+}
+
+/* Custom Scrollbar for Geospatial Consoles */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(11, 29, 42, 0.4);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #17A987;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #22C49F;
+}
+
+/* Grid Background for GIS aesthetics */
+.gis-grid-bg {
+  background-size: 30px 30px;
+  background-image: 
+    linear-gradient(to right, rgba(23, 169, 135, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(23, 169, 135, 0.05) 1px, transparent 1px);
+}
+
+.dark .gis-grid-bg {
+  background-image: 
+    linear-gradient(to right, rgba(23, 169, 135, 0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(23, 169, 135, 0.08) 1px, transparent 1px);
+}
