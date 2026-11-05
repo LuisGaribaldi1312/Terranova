@@ -3,6 +3,30 @@ Todas las modificaciones notables a este proyecto se documentarán en este archi
 
 ---
 
+## [1.8.0-phase.9] — 2026-11-05
+### Agregado
+- **Portal Ciudadano y Autoservicio Territorial (Fase 09)**:
+  - Base de Datos & Migraciones:
+    - Migración `database/migrations/005_citizen_portal.sql`:
+      - Creación de tabla `property_tax_bills` para emisión de estados de cuenta y líneas de captura bancarias oficiales con políticas de consulta pública y aislamiento RLS.
+      - Vista pública `citizen_public_tax_statement` para consulta ciudadana sin exposición de identificadores internos ni credenciales.
+  - Backend NestJS (`apps/api/src/citizen/`):
+    - Módulo `CitizenModule`, controlador `CitizenController` y servicio `CitizenService`.
+    - Endpoints públicos OpenAPI: `GET /citizen/incidents/:folio` (rastreo público de estatus sin login forzoso), `POST /citizen/incidents` (reporte ciudadano 072 exprés con georreferenciación), `GET /citizen/tax-statement` (estado de cuenta predial con desglose catastral y descuento del 15% por pronto pago) y `POST /citizen/tax-statement/pay` (liquidación bancaria simulada con sello criptográfico digital SHA-256).
+    - Algoritmo oficial de Línea de Captura Bancaria de 20 dígitos con cálculo ponderado de dígito verificador Módulo 10.
+  - Frontend React & Ventanilla Ciudadana (`apps/web/src/modules/CitizenPortalView.tsx`):
+    - Módulo integral de atención cívica accesible desde el shell principal en `apps/web/src/layouts/AppShell.tsx`.
+    - Tres servicios cívicos de autoservicio:
+      1. **Rastreo de Reportes 072**: Búsqueda por folio oficial `INC-YYYY-XXXXXX`, línea de tiempo visual con 5 fases (`Recibida`, `Validada`, `Asignada`, `En Proceso`, `Resuelta`), cuadrilla asignada, compromiso de SLA y fotografías de campo antes/después.
+      2. **Consulta y Pago de Predial**: Búsqueda por Clave Catastral mexicana (`ENT-MUN-ZON-MAN-PRE-EDI`), desglose de m² de suelo y construcción, alícuota del 0.35%, bonificación por pronto pago, código de barras bancario imprimible y pasarela simulada con recibo fiscal y sello SHA-256.
+      3. **Nuevo Reporte 072 Digital**: Formulario interactivo con tipología visual de fallas (baches, fugas, luminarias, alcantarillas, semáforos, escombros), captura de geolocalización GPS y emisión instantánea de ticket con folio oficial conectado reactivamente a la Mesa de Control.
+  - Pruebas Unitarias y Certificación:
+    - Suite `tests/unit/citizen-portal.test.ts` con validación de algoritmos de línea de captura bancaria, cálculo de base gravable y bonificación de pronto pago, sellos SHA-256 y delimitación geográfica de México (24/24 tests aprobados al 100%).
+  - Despliegue en Producción:
+    - Producción actualizada en Vercel con respuesta HTTP 200 en `https://terranova-mx.vercel.app`.
+
+---
+
 ## [1.7.0-phase.8] — 2026-11-05
 ### Agregado
 - **Módulo de Incidencias Urbanas y Mesa de Control de Despacho (Fase 08)**:

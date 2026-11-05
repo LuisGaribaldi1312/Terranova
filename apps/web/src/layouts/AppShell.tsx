@@ -13,9 +13,10 @@ import { IncidentsView } from '../modules/IncidentsView';
 import { FieldPwaView } from '../modules/FieldPwaView';
 import { AdminView } from '../modules/AdminView';
 import { InfrastructureView } from '../modules/InfrastructureView';
+import { CitizenPortalView } from '../modules/CitizenPortalView';
 
 // Placeholders for remaining modules in Phase 2
-import { HardHat, FileText, Users, Box, Bot, BarChart3 } from 'lucide-react';
+import { HardHat, FileText, Box, Bot, BarChart3 } from 'lucide-react';
 
 export const AppShell: React.FC = () => {
   const store = useTerranovaStore();
@@ -171,15 +172,12 @@ export const AppShell: React.FC = () => {
           )}
 
           {store.currentModule === 'citizen' && (
-            <div className="flex-1 p-6 overflow-y-auto space-y-4 gis-grid-bg">
-              <div className="bg-terranova-900/90 border border-terranova-700 p-4 rounded-2xl shadow-panel-dark">
-                <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                  <Users className="w-5 h-5 text-emerald-400" />
-                  Módulo 05: TERRANOVA CITIZEN — Portal Ciudadano
-                </h2>
-                <p className="text-xs text-gray-400">Ventanilla de participación ciudadana para reporte y consulta pública de incidencias por folio.</p>
-              </div>
-            </div>
+            <CitizenPortalView
+              incidents={store.incidents}
+              properties={store.properties}
+              onAddIncident={store.addIncident}
+              onFocusMap={handleFocusMap}
+            />
           )}
 
           {store.currentModule === 'digital-twin' && (
