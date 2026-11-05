@@ -112,3 +112,36 @@ export interface LayerItem {
   count: number;
   color: string;
 }
+
+
+export interface InfrastructureAssetItem {
+  id: string;
+  assetCode: string;
+  networkType: 'Agua Potable' | 'Drenaje' | 'Alumbrado' | 'Vialidad' | 'Telecom';
+  assetType: string;
+  status: 'Operativo' | 'En Mantenimiento' | 'Falla / Dañado' | 'Baja';
+  condition: 'Excelente' | 'Bueno' | 'Regular' | 'Crítico';
+  modelOrBrand: string;
+  installationDate: string;
+  costInstallation: number;
+  accumulatedMaintenanceCost: number;
+  expectedLifespanYears: number;
+  remainingLifespanYears: number;
+  lastInspectionAt?: string;
+  nextMaintenanceDue?: string;
+  neighborhood: string;
+  street: string;
+  coordinates: [number, number];
+  technicalSpecs: Record<string, any>;
+  maintenanceLogs?: MaintenanceLogItem[];
+}
+
+export interface MaintenanceLogItem {
+  id: string;
+  workOrderFolio: string;
+  maintenanceType: 'Preventivo' | 'Correctivo' | 'Emergencia';
+  cost: number;
+  performedAt: string;
+  performedBy: string;
+  notes: string;
+}

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ModuleId, Organization, LayerItem, PropertyItem, IncidentItem, ProjectItem } from '../types';
-import { MOCK_ORGANIZATIONS, MOCK_LAYERS, MOCK_PROPERTIES, MOCK_INCIDENTS, MOCK_PROJECTS, MOCK_KPIS } from './mockData';
+import { MOCK_ORGANIZATIONS, MOCK_LAYERS, MOCK_PROPERTIES, MOCK_INCIDENTS, MOCK_PROJECTS, MOCK_KPIS, MOCK_INFRASTRUCTURE } from './mockData';
 
 export function useTerranovaStore() {
   const [currentModule, setCurrentModule] = useState<ModuleId>('dashboard');
@@ -77,5 +77,6 @@ export function useTerranovaStore() {
     properties: MOCK_PROPERTIES,
     incidents: MOCK_INCIDENTS,
     projects: MOCK_PROJECTS,
+    infrastructureAssets: MOCK_INFRASTRUCTURE,
   };
 }

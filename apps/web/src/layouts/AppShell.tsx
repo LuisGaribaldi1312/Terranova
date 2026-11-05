@@ -12,9 +12,10 @@ import { PropertiesView } from '../modules/PropertiesView';
 import { IncidentsView } from '../modules/IncidentsView';
 import { FieldPwaView } from '../modules/FieldPwaView';
 import { AdminView } from '../modules/AdminView';
+import { InfrastructureView } from '../modules/InfrastructureView';
 
 // Placeholders for remaining modules in Phase 2
-import { HardHat, Zap, FileText, Users, Box, Bot, BarChart3 } from 'lucide-react';
+import { HardHat, FileText, Users, Box, Bot, BarChart3 } from 'lucide-react';
 
 export const AppShell: React.FC = () => {
   const store = useTerranovaStore();
@@ -145,30 +146,10 @@ export const AppShell: React.FC = () => {
           )}
 
           {store.currentModule === 'infrastructure' && (
-            <div className="flex-1 p-6 overflow-y-auto space-y-4 gis-grid-bg">
-              <div className="bg-terranova-900/90 border border-terranova-700 p-4 rounded-2xl shadow-panel-dark">
-                <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                  <Zap className="w-5 h-5 text-terranova-400" />
-                  Módulo 03: TERRANOVA INFRASTRUCTURE — Activos e Instalaciones
-                </h2>
-                <p className="text-xs text-gray-400">Inventario georreferenciado de luminarias, semáforos, redes hidráulicas y mobiliario urbano.</p>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                {[
-                  { name: 'Alumbrado Público LED', total: 9840, op: '96.2%', icon: '💡' },
-                  { name: 'Semáforos y Cruceros', total: 420, op: '98.5%', icon: '🚦' },
-                  { name: 'Pozos y Válvulas de Agua', total: 3200, op: '91.8%', icon: '💧' },
-                  { name: 'Parques y Áreas Verdes', total: 184, op: '94.0%', icon: '🌳' },
-                ].map((item, idx) => (
-                  <div key={idx} className="p-4 rounded-xl bg-terranova-900 border border-terranova-700 shadow-panel-dark">
-                    <span className="text-2xl block mb-2">{item.icon}</span>
-                    <h3 className="text-sm font-bold text-white">{item.name}</h3>
-                    <p className="text-2xl font-mono font-black text-terranova-400 my-1">{item.total.toLocaleString()}</p>
-                    <span className="text-[10px] font-mono text-emerald-400 font-bold">{item.op} Operatividad</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <InfrastructureView
+              assets={store.infrastructureAssets}
+              onFocusMap={handleFocusMap}
+            />
           )}
 
           {store.currentModule === 'permits' && (
