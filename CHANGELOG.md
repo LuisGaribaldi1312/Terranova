@@ -3,6 +3,36 @@ Todas las modificaciones notables a este proyecto se documentarán en este archi
 
 ---
 
+## [1.6.0-phase.7] — 2026-11-05
+### Agregado
+- **Módulo de Infraestructura Urbana y Activos de Red (Fase 07)**:
+- Base de datos y Migraciones:
+  - Migración `database/migrations/003_infrastructure_lifecycle.sql`:
+    - Ampliación de `infrastructure_assets` con `network_type` (Agua Potable, Drenaje, Alumbrado, Vialidad, Telecom), condición física (`asset_condition`), costos de instalación y mantenimiento acumulado, ciclo de vida remanente y próxima inspección programada.
+    - Creación de tabla inmutable `asset_maintenance_logs` con aislamiento multi-tenant por Row Level Security (RLS) para registrar intervenciones preventivas, correctivas y de emergencia.
+    - Índices de consulta optimizados por red urbana, estatus y condición.
+- Backend NestJS (`apps/api/src/infrastructure/`):
+  - DTOs tipados: `CreateAssetDto` (validación de código de inventario estandarizado y geometría `ST_IsValid`) y `RecordMaintenanceDto`.
+  - Servicio de ciclo de vida con cálculo automatizado de antigüedad, depreciación y vida útil remanente.
+  - Endpoint `GET /api/v1/infrastructure`: Búsqueda con filtros multi-criterio.
+  - Endpoint `GET /api/v1/infrastructure/stats`: KPIs globales de operatividad y costos de redes.
+  - Endpoint `GET /api/v1/infrastructure/:id`: Ficha técnica con bitácora histórica.
+  - Endpoint `POST /api/v1/infrastructure/:id/maintenance`: Registro de orden de trabajo con actualización de condición y gasto acumulado.
+- Frontend React & Interfaz de Redes (`apps/web/src/modules/InfrastructureView.tsx`):
+  - Tablero de control con métricas en tiempo real: Inventario de activos, tasa de operatividad (83.3%), activos críticos, valor capital y gasto acumulado.
+  - Selector de vistas: Tarjetas de red / Tabla tabular de inventario municipal.
+  - Filtros dinámicos por Red (Agua Potable, Drenaje, Alumbrado, Vialidad, Telecom), Estatus y Condición.
+  - Modal de Ficha Técnica de Ingeniería con especificaciones JSONB desglosadas (diámetros, presiones, potencias, voltajes, etc.).
+  - Bitácora interactiva de intervenciones con formulario para registrar nuevas órdenes de trabajo.
+  - Modal de alta de nuevo activo urbano con validación georreferenciada.
+  - Integración en `AppShell.tsx` reemplazando los placeholders previos.
+- Pruebas y Despliegue:
+  - Pruebas unitarias en `tests/unit/infrastructure-lifecycle.test.ts`.
+  - Compilación verificada con TypeScript (`strict: true`).
+  - Sincronizado en GitHub y desplegado en Vercel Producción (`https://terranova-mx.vercel.app`).
+
+---
+
 ## [1.5.0-phase.6] — 2026-11-05
 ### Agregado
 - **Módulo de Territorios y Predios: Catastro Avanzado Completo (Fase 06)**.
