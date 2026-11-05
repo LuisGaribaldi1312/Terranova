@@ -3,6 +3,27 @@ Todas las modificaciones notables a este proyecto se documentarán en este archi
 
 ---
 
+## [1.3.0-phase.4] — 2026-11-05
+### Agregado
+- **Autenticación Robusta, Roles (RBAC), MFA y Aislamiento Multi-Tenant (Fase 04)**.
+- Módulo `AuthModule`:
+  - Login seguro (`POST /api/v1/auth/login`) con verificación de contraseña mediante hashing BCrypt (factor de costo 12).
+  - Soporte de Autenticación Multifactor **TOTP RFC 6238** (`POST /api/v1/auth/mfa/generate` y `verify`) con clave secreta y URI para Google Authenticator / Authy.
+  - Registro de usuarios institucionales (`POST /api/v1/auth/register`) vinculados a organizaciones con membresía automática.
+  - Consulta de perfil autenticado con rol y permisos (`GET /api/v1/auth/profile`).
+  - Estrategia y Guard de JWT (`JwtStrategy`, `JwtAuthGuard`) con tokens firmados de 15 minutos de vigencia.
+- Control de Acceso Basado en Roles (RBAC):
+  - Decorador `@Roles(...)` y guardia `@UseGuards(RolesGuard)` para validar roles institucionales (`superadmin`, `admin`, `director`, `gis_coordinator`, `inspector`, etc.).
+  - Búsqueda y asignación de roles en la organización (`POST /api/v1/users/:id/assign-role`).
+- Aislamiento Multi-Tenant Forzoso:
+  - `TenantGuard`: Bloqueo estricto contra accesos cruzados (*Cross-Tenant Access*); un usuario de una organización no puede consultar información de otro municipio.
+  - El rol `superadmin` dispone de privilegios de auditoría global transversal.
+- Trazabilidad y Auditoría:
+  - `AuditService`: Registro inmutable en la tabla `audit_logs` con acción, entidad, usuario, organización, dirección IP y user agent.
+- Pruebas y Calidad:
+  - Suite de pruebas unitarias en `tests/unit/auth-isolation.test.ts` verificando hashing de contraseñas, aislamiento entre municipios y algoritmo TOTP.
+  - Compilación exitosa del backend con NestJS (`nest build` con cero errores).
+
 ## [1.2.0-phase.3] — 2026-11-05
 ### Agregado
 - **Backend Modular NestJS, Modelos PostGIS y Servicios Centrales (Fase 03)**.
