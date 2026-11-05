@@ -3,6 +3,8 @@ node_modules/
 dist/
 build/
 .npm/
+*.tsbuildinfo
+.vercel/
 
 # Environment files
 .env
