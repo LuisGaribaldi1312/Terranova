@@ -45,15 +45,36 @@ export interface KPICardData {
 
 export interface PropertyItem {
   id: string;
-  cadastralKey: string; // Clave Catastral INEGI/Municipal
+  cadastralKey: string; // Clave Catastral INEGI/Municipal: ENT-MUN-ZON-MAN-PRE-EDI-DEP
   neighborhood: string;
-  landArea: number;
-  builtArea: number;
+  street?: string;
+  postalCode?: string;
+  landArea: number; // m²
+  builtArea: number; // m²
+  levelsCount?: number;
   landUse: 'Habitacional' | 'Comercial' | 'Mixto' | 'Equipamiento' | 'Industrial';
   status: 'Registrado' | 'En Revisión' | 'Disputa';
+  propertyRegime?: 'Privada' | 'Ejidal' | 'Comunal' | 'Pública' | 'Condominio';
   cadastralValue: number;
-  coordinates: [number, number];
+  landCadastralValue?: number;
+  constructionCadastralValue?: number;
+  landValueUnitSqm?: number;
+  constructionValueUnitSqm?: number;
+  taxStatus?: 'Al Corriente' | 'Con Adeudo' | 'Exento';
+  annualPropertyTax?: number;
+  taxDebtAmount?: number;
+  boundaryNorth?: string;
+  boundarySouth?: string;
+  boundaryEast?: string;
+  boundaryWest?: string;
+  cadastralCertificateFolio?: string;
+  cadastralCertificateIssuedAt?: string;
+  digitalStamp?: string;
+  coordinates: [number, number]; // Centroide [lng, lat]
+  polygonVertices?: [number, number][];
   owner: string;
+  ownerRfc?: string;
+  ownerCurp?: string;
 }
 
 export interface IncidentItem {
