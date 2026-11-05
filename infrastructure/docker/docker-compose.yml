@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  # Base de Datos Relacional y Geoespacial (PostgreSQL 16 + PostGIS 3.4)
+  terranova-db:
+    image: postgis/postgis:16-3.4
+    container_name: terranova-postgres-postgis
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: terranova_user
+      POSTGRES_PASSWORD: terranova_secure_dev_password
+      POSTGRES_DB: terranova_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - terranova-net
+
+  # Cache y Colas de Tareas / Sincronización
+  terranova-redis:
+    image: redis:7-alpine
+    container_name: terranova-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    networks:
+      - terranova-net
+
+volumes:
+  pgdata:
+  redisdata:
+
+networks:
+  terranova-net:
+    driver: bridge

@@ -1,0 +1,19 @@
+{
+  "name": "terranova",
+  "version": "1.0.0",
+  "private": true,
+  "description": "TERRANOVA - Intelligence & Territorial Management Platform",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspaces",
+    "build": "npm run build --workspaces",
+    "test": "npm run test --workspaces",
+    "lint": "npm run lint --workspaces"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5"
+  }
+}
