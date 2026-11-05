@@ -1,30 +1,58 @@
-import { Controller, Post, Get, Body, Headers } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiHeader } from '@nestjs/swagger';
+import { Controller, Get, Post, Body, Query, Param, UsePipes, ValidationPipe, HttpCode, HttpStatus } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { SyncService } from './sync.service';
-import { SyncBatchDto } from './dto/sync-batch.dto';
+import { SyncPushDto, ResolveConflictDto } from './dto/sync.dto';
 
-@ApiTags('Sincronización Offline (TERRANOVA SYNC)')
+@ApiTags('Sincronización Offline (PWA Sync)')
 @Controller('sync')
+@UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
 export class SyncController {
   constructor(private readonly syncService: SyncService) {}
 
-  @Post('push')
-  @ApiOperation({ summary: 'Recibir lote de mutaciones capturadas sin internet con garantía de idempotencia' })
-  @ApiHeader({ name: 'x-organization-id', required: false })
-  push(
-    @Headers('x-organization-id') orgId: string,
-    @Body() dto: SyncBatchDto
+  @Get('handshake')
+  @ApiOperation({ summary: 'Verificación de conectividad, latencia y compatibilidad PWA' })
+  @ApiQuery({ name: 'organizationId', required: true, description: 'ID de la organización' })
+  @ApiQuery({ name: 'clientVersion', required: true, description: 'Versión del cliente PWA' })
+  @ApiResponse({ status: 200, description: 'Servidor listo para sincronización bidireccional' })
+  async handshake(
+    @Query('organizationId') organizationId: string,
+    @Query('clientVersion') clientVersion: string,
   ) {
-    const activeOrg = orgId || 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d';
-    const systemUser = 'd4e5f6a7-b89c-0d1e-2f3a-4b5c6d7e8f9a';
-    return this.syncService.processSyncBatch(activeOrg, systemUser, dto);
+    return this.syncService.handshake(organizationId, clientVersion);
   }
 
-  @Get('catalogs')
-  @ApiOperation({ summary: 'Descargar catálogos maestros para persistencia local en Dexie.js' })
-  @ApiHeader({ name: 'x-organization-id', required: false })
-  getCatalogs(@Headers('x-organization-id') orgId: string) {
-    const activeOrg = orgId || 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d';
-    return this.syncService.getCatalogsForOffline(activeOrg);
+  @Post('push')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Recepción transaccional de lote de operaciones offline con garantía de idempotencia' })
+  @ApiResponse({ status: 200, description: 'Lote procesado exitosamente sin duplicados' })
+  async pushBatch(@Body() dto: SyncPushDto) {
+    return this.syncService.processPushBatch(dto);
+  }
+
+  @Get('pull')
+  @ApiOperation({ summary: 'Descarga delta de cambios del servidor hacia el cliente offline' })
+  @ApiQuery({ name: 'organizationId', required: true })
+  @ApiQuery({ name: 'since', required: false, description: 'Timestamp ISO de la última sincronización' })
+  async pullDelta(
+    @Query('organizationId') organizationId: string,
+    @Query('since') since?: string,
+  ) {
+    return this.syncService.getDelta(organizationId, since);
+  }
+
+  @Get('conflicts')
+  @ApiOperation({ summary: 'Consulta de conflictos de sincronización concurrentes' })
+  @ApiQuery({ name: 'organizationId', required: true })
+  async getConflicts(@Query('organizationId') organizationId: string) {
+    return this.syncService.getConflicts(organizationId);
+  }
+
+  @Post('conflicts/:id/resolve')
+  @ApiOperation({ summary: 'Resolución pericial de conflicto de sincronización' })
+  async resolveConflict(
+    @Param('id') conflictId: string,
+    @Body() dto: ResolveConflictDto,
+  ) {
+    return this.syncService.resolveConflict(conflictId, dto);
   }
 }

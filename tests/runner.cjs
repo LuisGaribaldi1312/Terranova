@@ -40,6 +40,15 @@ function createExpect(actual) {
         throw new Error(`Expected length ${expected} but got ${actual ? actual.length : actual}`);
       }
     },
+    toContain(expected) {
+      if (typeof actual === 'string' || Array.isArray(actual)) {
+        if (!actual.includes(expected)) {
+          throw new Error(`Expected ${JSON.stringify(actual)} to contain ${JSON.stringify(expected)}`);
+        }
+      } else {
+        throw new Error(`toContain requires string or array, got ${typeof actual}`);
+      }
+    },
   };
 
   matchers.not = {

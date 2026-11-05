@@ -3,6 +3,30 @@ Todas las modificaciones notables a este proyecto se documentarán en este archi
 
 ---
 
+## [1.11.0-phase.12] — 2026-11-05
+### Agregado
+- **Módulo de Operación en Campo Offline-First, Dexie.js & Sincronización Transaccional (Fase 12 — TERRANOVA FIELD PWA)**:
+  - Base de Datos & Migraciones:
+    - Migración `database/migrations/008_offline_sync.sql`:
+      - Creación de tabla `sync_client_operations` para registro inmutable de operaciones de cliente con clave de idempotencia estricta (`client_operation_id` UUID v4 UNIQUE), timestamp de captura en campo, payload JSONB y RLS multi-tenant por `organization_id`.
+      - Creación de tabla `sync_conflicts` para registro y mediación pericial de discrepancias concurrentes de versión.
+  - Backend NestJS (`apps/api/src/sync/`):
+    - DTOs con validación: `SyncHandshakeDto`, `SyncPushDto`, `SyncOperationItemDto` y `ResolveConflictDto`.
+    - Servicio `SyncService` con handshake de verificación de compatibilidad, procesamiento atómico de lotes con garantía de idempotencia (0 duplicados), detección de colisiones de versión concurrente y deltas de cambios (`pull`).
+    - Controlador `SyncController` con endpoints OpenAPI: `GET /sync/handshake`, `POST /sync/push`, `GET /sync/pull`, `GET /sync/conflicts` y `POST /sync/conflicts/:id/resolve`.
+  - Frontend PWA, Dexie.js & Sync Engine (`apps/web/src/services/offline/`):
+    - Base de datos IndexedDB `TerranovaOfflineDB` con Dexie.js: tablas `syncQueue`, `localIncidents`, `localInspections` y `cachedCatalogs`.
+    - Motor `SyncEngine` con despacho transaccional de lotes, ping de latencia, retroceso exponencial (Exponential Backoff: 2s, 4s, 8s...) y purga automática de operaciones confirmadas.
+  - Interfaz de Usuario & Simulador Móvil de Campo (`apps/web/src/modules/FieldPwaView.tsx`):
+    - Simulador interactivo de Smartphone táctil para brigadas e inspectores con barra de estado nativa, indicador GPS y selector de red Online/Offline.
+    - Formulario de captura en campo con georreferenciación GPS de alta precisión (±3m), evidencia fotográfica comprimida en WebP local y almacenamiento inmediato en Dexie.js.
+    - **Validación del Criterio Innegociable de Aceptación**: Botón de prueba masiva de **50 incidencias consecutivas offline** con telemetría en tiempo real, 0 pérdida de registros y confirmación de lote.
+    - Panel de telemetría técnica con métricas de almacenamiento, latencia de sincronización y tabla inspectora de `syncQueue`.
+  - Pruebas Unitarias y Certificación de Calidad:
+    - Suite de pruebas en `tests/unit/offline-dexie-sync.test.ts` con validación de idempotencia estricta, encolado de 50 registros sin pérdida, algoritmo de retroceso exponencial, resolución de conflictos y máquina de estados (39/39 tests aprobados al 100%).
+
+---
+
 ## [1.10.0-phase.11] — 2026-11-05
 ### Agregado
 - **Módulo de Permisos Urbanos, Expedientes Digitales y Ventanilla Única (Fase 11 — TERRANOVA PERMITS)**:
