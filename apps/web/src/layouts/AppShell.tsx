@@ -14,9 +14,10 @@ import { FieldPwaView } from '../modules/FieldPwaView';
 import { AdminView } from '../modules/AdminView';
 import { InfrastructureView } from '../modules/InfrastructureView';
 import { CitizenPortalView } from '../modules/CitizenPortalView';
+import { ProjectsView } from '../modules/ProjectsView';
 
 // Placeholders for remaining modules in Phase 2
-import { HardHat, FileText, Box, Bot, BarChart3 } from 'lucide-react';
+import { FileText, Box, Bot, BarChart3 } from 'lucide-react';
 
 export const AppShell: React.FC = () => {
   const store = useTerranovaStore();
@@ -114,39 +115,16 @@ export const AppShell: React.FC = () => {
 
           {/* Additional interactive views for remaining modules */}
           {store.currentModule === 'projects' && (
-            <div className="flex-1 p-6 overflow-y-auto space-y-4 gis-grid-bg">
-              <div className="bg-terranova-900/90 border border-terranova-700 p-4 rounded-2xl shadow-panel-dark">
-                <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                  <HardHat className="w-5 h-5 text-amber-400" />
-                  Módulo 06: TERRANOVA PROJECTS — Obras y Proyectos Urbanos
-                </h2>
-                <p className="text-xs text-gray-400">Control físico-financiero de contratos de obra pública, estimaciones y curva S.</p>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {store.projects.map((prj) => (
-                  <div
-                    key={prj.id}
-                    onClick={() => store.setSelectedEntity({ type: 'project', data: prj })}
-                    className="p-4 rounded-xl bg-terranova-900 border border-terranova-700 cursor-pointer hover:border-terranova-500 shadow-panel-dark transition-all"
-                  >
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="font-mono text-xs font-bold text-terranova-400">{prj.code}</span>
-                      <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold">{prj.status}</span>
-                    </div>
-                    <h3 className="text-sm font-semibold text-white mb-1">{prj.name}</h3>
-                    <p className="text-xs text-gray-400 mb-3">{prj.contractor}</p>
-                    <div className="w-full bg-terranova-950 rounded-full h-2 mb-2">
-                      <div className="bg-gradient-to-r from-terranova-500 to-emerald-400 h-2 rounded-full" style={{ width: `${prj.progressPercentage}%` }} />
-                    </div>
-                    <div className="flex justify-between text-[11px] font-mono text-gray-400">
-                      <span>Avance: {prj.progressPercentage}%</span>
-                      <span className="text-emerald-400 font-bold">${(prj.budgetAllocated/1000000).toFixed(1)}M MXN</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <ProjectsView
+              projects={store.projects}
+              onSelectProject={(p) => store.setSelectedEntity({ type: 'project', data: p })}
+              onFocusMap={handleFocusMap}
+              onAddProject={store.addProject}
+              onAddEstimation={store.addEstimation}
+              onUpdateEstimationStatus={store.updateEstimationStatus}
+            />
           )}
+
 
           {store.currentModule === 'infrastructure' && (
             <InfrastructureView

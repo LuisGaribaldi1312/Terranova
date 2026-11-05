@@ -117,11 +117,31 @@ export interface IncidentItem {
   coordinates: [number, number];
 }
 
+export interface ProjectEstimation {
+  id: string;
+  estimationNumber: number;
+  period: string;
+  grossAmount: number;
+  advanceAmortization: number;
+  guaranteeRetention: number;
+  netPayable: number;
+  status: 'DRAFT' | 'VALIDATED_SUPERVISOR' | 'APPROVED_TREASURY' | 'PAID';
+  cfdiUuid?: string;
+  paidAt?: string;
+}
+
+export interface ProjectSCurvePoint {
+  month: string;
+  planned: number;
+  real: number;
+  financial: number;
+}
+
 export interface ProjectItem {
   id: string;
   code: string;
   name: string;
-  type: 'Vialidad' | 'Hidráulica' | 'Equipamiento' | 'Electrificación';
+  type: 'Vialidad' | 'Hidráulica' | 'Equipamiento' | 'Electrificación' | string;
   budgetAllocated: number;
   budgetExercised: number;
   progressPercentage: number;
@@ -129,6 +149,16 @@ export interface ProjectItem {
   status: 'Planificada' | 'En Ejecución' | 'Licitación' | 'Concluida';
   startDate: string;
   endDate: string;
+  contractNumber?: string;
+  contractorRfc?: string;
+  fundingSource?: string;
+  supervisorName?: string;
+  physicalProgressPlanned?: number;
+  physicalProgressReal?: number;
+  financialProgress?: number;
+  coordinates?: [number, number];
+  sCurve?: ProjectSCurvePoint[];
+  estimations?: ProjectEstimation[];
 }
 
 export interface LayerItem {

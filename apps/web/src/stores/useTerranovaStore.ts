@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ModuleId, Organization, LayerItem, PropertyItem, IncidentItem, ProjectItem } from '../types';
+import { ModuleId, Organization, LayerItem, PropertyItem, IncidentItem, ProjectItem, ProjectEstimation } from '../types';
 import { MOCK_ORGANIZATIONS, MOCK_LAYERS, MOCK_PROPERTIES, MOCK_INCIDENTS, MOCK_PROJECTS, MOCK_KPIS, MOCK_INFRASTRUCTURE } from './mockData';
 
 export function useTerranovaStore() {
@@ -15,6 +15,9 @@ export function useTerranovaStore() {
   
   // Incidents Reactive State
   const [incidents, setIncidents] = useState<IncidentItem[]>(MOCK_INCIDENTS);
+
+  // Projects & Public Works State
+  const [projects, setProjects] = useState<ProjectItem[]>(MOCK_PROJECTS);
 
   // Selection for Inspector Panel
   const [selectedEntity, setSelectedEntity] = useState<{
@@ -99,6 +102,72 @@ export function useTerranovaStore() {
     );
   };
 
+  // Projects Actions
+  const addProject = (newPrj: ProjectItem) => {
+    setProjects((prev) => [newPrj, ...prev]);
+    setNotifications((prev) => [
+      {
+        id: Date.now().toString(),
+        title: `Nuevo Contrato de Obra: ${newPrj.code}`,
+        desc: `${newPrj.name} (${newPrj.fundingSource || 'FAISMUN'})`,
+        time: 'Justo ahora',
+        unread: true,
+      },
+      ...prev,
+    ]);
+  };
+
+  const addEstimation = (projectId: string, estimation: ProjectEstimation) => {
+    setProjects((prev) =>
+      prev.map((p) => {
+        if (p.id !== projectId) return p;
+        const currentEstimations = p.estimations ? [...p.estimations] : [];
+        return {
+          ...p,
+          estimations: [...currentEstimations, estimation],
+        };
+      })
+    );
+  };
+
+  const updateEstimationStatus = (
+    projectId: string,
+    estimationNumber: number,
+    status: ProjectEstimation['status']
+  ) => {
+    setProjects((prev) =>
+      prev.map((p) => {
+        if (p.id !== projectId) return p;
+        const currentEstimations = p.estimations
+          ? p.estimations.map((e) => {
+              if (e.estimationNumber !== estimationNumber) return e;
+              return {
+                ...e,
+                status,
+                paidAt: status === 'PAID' ? new Date().toISOString() : e.paidAt,
+              };
+            })
+          : [];
+
+        // Si se pagó, actualizamos el presupuesto ejercido y avance financiero
+        let newExercised = p.budgetExercised;
+        if (status === 'PAID') {
+          const est = p.estimations?.find((e) => e.estimationNumber === estimationNumber);
+          if (est) newExercised += est.grossAmount;
+        }
+
+        const newFinancialProgress = Number(((newExercised / p.budgetAllocated) * 100).toFixed(1));
+
+        return {
+          ...p,
+          budgetExercised: newExercised,
+          financialProgress: newFinancialProgress,
+          estimations: currentEstimations,
+        };
+      })
+    );
+  };
+
   return {
     currentModule,
     setCurrentModule,
@@ -124,7 +193,11 @@ export function useTerranovaStore() {
     setIncidents,
     addIncident,
     updateIncidentStatus,
-    projects: MOCK_PROJECTS,
+    projects,
+    setProjects,
+    addProject,
+    addEstimation,
+    updateEstimationStatus,
     infrastructureAssets: MOCK_INFRASTRUCTURE,
   };
 }

@@ -3,6 +3,31 @@ Todas las modificaciones notables a este proyecto se documentarán en este archi
 
 ---
 
+## [1.9.0-phase.10] — 2026-11-05
+### Agregado
+- **Módulo de Obras Públicas, Curva S y Estimaciones (Fase 10 — TERRANOVA PROJECTS)**:
+  - Base de Datos & Migraciones:
+    - Migración `database/migrations/006_public_works_projects.sql`:
+      - Ampliación de la tabla `projects` con fuente de financiamiento federal (`FAISMUN`, `FORTAMUN`, `Recursos Propios`), número de contrato oficial (`COP-PUE-YYYY-XXX`), RFC de contratista, anticipo contractual (30%), avance físico programado vs. real, avance financiero y supervisión externa.
+      - Creación de tabla `project_estimations` con amortización de anticipo (30%), retención 5 al millar (0.5% supervisión y garantía), estatus normativo (`DRAFT`, `VALIDATED_SUPERVISOR`, `APPROVED_TREASURY`, `PAID`), CFDI 4.0 UUID y RLS multi-tenant.
+      - Creación de tabla `project_s_curve_points` para series temporales de Curva S con índice y etiqueta periódica.
+  - Backend NestJS (`apps/api/src/projects/`):
+    - DTOs tipados: `CreateProjectDto`, `CreateEstimationDto` y `UpdateEstimationStatusDto`.
+    - Servicio de ingeniería de costos con cálculo automático de deducciones de estimación (amortización de anticipo y retención de garantía).
+    - Endpoints REST documentados en OpenAPI: `GET /projects`, `GET /projects/stats` (KPIs financieros y avance promedio), `GET /projects/:id` (ficha técnica con serie de Curva S y estimaciones), `POST /projects/:id/estimations` y `PATCH /projects/:id/estimations/:num/status`.
+  - Frontend React & Tablero de Obras (`apps/web/src/modules/ProjectsView.tsx`):
+    - Tablero ejecutivo con métricas en tiempo real: Inversión Total Asignada ($96.7M), Total Ejercido ($70.2M), Saldo en Tesorería, Frentes Activos y Avance Físico Ponderado (72%).
+    - **Visualizador Interactivo de Curva S (SVG)** con tres series dinámicas: Avance Programado (Base Contractual), Avance Físico Real en Sitio y Avance Financiero, con detección matemática y alerta de atraso físico en frentes de obra.
+    - **Módulo de Estimaciones de Obra Pública**: Desglose financiero por estimación (Monto Bruto, Amortización 30%, Retención 5 al millar y Neto a liquidar al contratista) con flujo de validación (`BORRADOR` $	o$ `VALIDADA SUPERVISIÓN` $	o$ `APROBADA TESORERÍA` $	o$ `PAGADA EN BANCO`).
+    - Modal interactivo para registrar nuevas estimaciones con cálculo reactivo inmediato y modal para dar de alta nuevos contratos de obra pública bajo normativa mexicana.
+    - Integración completa en el shell principal (`apps/web/src/layouts/AppShell.tsx`) y store global reactivo (`useTerranovaStore.ts`).
+  - Pruebas Unitarias y Certificación:
+    - Suite de pruebas en `tests/unit/projects-curve-s.test.ts` con validación de cálculos de amortización y retención 5 al millar, acumulación financiera de estimaciones, detección de atrasos en Curva S y regex de contratos oficiales mexicanos (29/29 tests aprobados al 100%).
+  - Despliegue en Producción:
+    - Despliegue verificado en Vercel Production con código HTTP 200 en `https://terranova-mx.vercel.app`.
+
+---
+
 ## [1.8.0-phase.9] — 2026-11-05
 ### Agregado
 - **Portal Ciudadano y Autoservicio Territorial (Fase 09)**:
