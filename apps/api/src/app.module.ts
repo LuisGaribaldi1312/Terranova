@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { CommonModule } from './common/common.module';
+import { AuthModule } from './auth/auth.module';
+import { UsersModule } from './users/users.module';
 import { OrganizationsModule } from './organizations/organizations.module';
 import { TerritoriesModule } from './territories/territories.module';
 import { PropertiesModule } from './properties/properties.module';
@@ -17,6 +19,8 @@ import { GisModule } from './gis/gis.module';
       envFilePath: ['.env', '.env.local'],
     }),
     CommonModule,
+    AuthModule,
+    UsersModule,
     OrganizationsModule,
     TerritoriesModule,
     PropertiesModule,

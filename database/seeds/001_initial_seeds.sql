@@ -30,7 +30,28 @@ VALUES
     ('f6a7b89c-0d1e-2f3a-4b5c-6d7e8f9a0b1c', 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d', 'Inspector de Campo', 'inspector', 'Brigadista móvil en PWA offline', TRUE)
 ON CONFLICT DO NOTHING;
 
--- 4. Predio Catastral de Referencia con Polígono Validado en Puebla
+-- 4. Usuario Inicial Semilla (Password: Terranova2026!*)
+INSERT INTO users (id, email, password_hash, first_name, last_name, job_title, is_active)
+VALUES (
+    '11223344-5566-7788-99aa-bbccddeeff00',
+    'admin.territorial@puebla.gob.mx',
+    '$2b$12$Z21ZxsQ3z7LACtj3oy7mtu6Q23vHCJchuU/6dQacMtMPRcnWkotDW',
+    'Ing. Arq. Alejandro',
+    'Ramírez Santillán',
+    'Director General de Gestión Territorial',
+    TRUE
+) ON CONFLICT (email) DO NOTHING;
+
+-- 5. Membresía del Usuario en el H. Ayuntamiento de Puebla
+INSERT INTO organization_members (organization_id, user_id, role_id, is_active)
+VALUES (
+    'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
+    '11223344-5566-7788-99aa-bbccddeeff00',
+    'd4e5f6a7-b89c-0d1e-2f3a-4b5c6d7e8f9a',
+    TRUE
+) ON CONFLICT (organization_id, user_id) DO NOTHING;
+
+-- 6. Predio Catastral de Referencia con Polígono Validado en Puebla
 INSERT INTO properties (
     organization_id, cadastral_key, property_type, land_use, status, 
     land_area_sqm, built_area_sqm, cadastral_value, address_street, address_neighborhood, 
