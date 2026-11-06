@@ -366,10 +366,10 @@ export const GisExplorerView: React.FC<GisExplorerViewProps> = ({
             </span>
             <div className="grid grid-cols-2 gap-1.5 mb-1.5">
               {[
-                { id: 'voyager', label: '☀️ Día (Voyager)', desc: 'Calles & relieve' },
-                { id: 'dark', label: '🌙 Noche (Dark)', desc: 'Alto contraste' },
-                { id: 'topo', label: '🛣️ Topo (Esri)', desc: 'Carreteras & toponimia' },
-                { id: 'osm', label: '🗺️ OpenStreet', desc: 'Comunidad OSM' },
+                { id: 'voyager', label: '☀️ Día (Calles HD)', desc: 'Calles, avenidas & relieve' },
+                { id: 'dark', label: '🌙 Noche (Dark GIS)', desc: 'Alto contraste nocturno' },
+                { id: 'topo', label: '🛣️ Topo (Relieve)', desc: 'Carreteras & curvas' },
+                { id: 'osm', label: '🗺️ Gris Neutro', desc: 'Canvas analítico limpio' },
               ].map((map) => (
                 <button
                   key={map.id}

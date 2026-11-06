@@ -65,42 +65,39 @@ export const MapLibreMap: React.FC<MapLibreMapProps> = ({
   const [mapLoaded, setMapLoaded] = useState(false);
   const [mapError, setMapError] = useState<string | null>(null);
 
-  // Estilos de MapLibre: Raster de alta disponibilidad para garantizar visualización inmediata
+  // Estilos de MapLibre: Motores Raster de Alta Disponibilidad Global sin Bloqueos ni Marcas de Agua
   const getStyleUrl = (style: BaseMapStyle) => {
     switch (style) {
       case 'voyager':
-        // CartoDB Voyager: La cartografía más nítida, detallada y legible para modo diurno
+        // ☀️ MODO DÍA: Esri World Street Map (Calles completas, avenidas, colonias, relieve y toponimia nítida)
         return {
           version: 8,
           sources: {
-            'carto-voyager': {
-              type: 'raster',
-              tiles: [
-                'https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
-                'https://b.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
-                'https://c.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
-              ],
-              tileSize: 256,
-              attribution: '&copy; CartoDB &copy; OpenStreetMap contributors',
-            },
-          },
-          layers: [{ id: 'carto-voyager-layer', type: 'raster', source: 'carto-voyager' }],
-        };
-      case 'topo':
-        // Esri World Street Map: Red de carreteras federales, estatales y toponimia completa
-        return {
-          version: 8,
-          sources: {
-            'esri-topo': {
+            'esri-day-streets': {
               type: 'raster',
               tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}'],
               tileSize: 256,
               attribution: 'Esri, HERE, Garmin, USGS, NGA, EPA',
             },
           },
+          layers: [{ id: 'esri-day-streets-layer', type: 'raster', source: 'esri-day-streets' }],
+        };
+      case 'topo':
+        // 🛣️ MODO TOPO: Esri World Topo Map (Curvas de nivel, relieve montañoso y carreteras federales)
+        return {
+          version: 8,
+          sources: {
+            'esri-topo': {
+              type: 'raster',
+              tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}'],
+              tileSize: 256,
+              attribution: 'Esri, FAO, NOAA, USGS, EPA',
+            },
+          },
           layers: [{ id: 'esri-topo-layer', type: 'raster', source: 'esri-topo' }],
         };
       case 'sat':
+        // 🛰️ MODO SATÉLITE HD: Esri World Imagery + Capa de Nombres y Límites Geográficos
         return {
           version: 8,
           sources: {
@@ -110,40 +107,64 @@ export const MapLibreMap: React.FC<MapLibreMapProps> = ({
               tileSize: 256,
               attribution: 'Esri, Maxar, Earthstar Geographics',
             },
+            'esri-sat-labels': {
+              type: 'raster',
+              tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}'],
+              tileSize: 256,
+              attribution: 'Esri, Maxar',
+            },
           },
-          layers: [{ id: 'esri-satellite-layer', type: 'raster', source: 'esri-satellite' }],
+          layers: [
+            { id: 'esri-satellite-layer', type: 'raster', source: 'esri-satellite' },
+            { id: 'esri-sat-labels-layer', type: 'raster', source: 'esri-sat-labels' },
+          ],
         };
       case 'osm':
+        // 🗺️ MODO GRIS NEUTRO: Esri World Light Gray Canvas (Base + Etiquetas nítidas para análisis GIS)
         return {
           version: 8,
           sources: {
-            'osm-tiles': {
+            'esri-light-base': {
               type: 'raster',
-              tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+              tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}'],
               tileSize: 256,
-              attribution: '&copy; OpenStreetMap Contributors',
+              attribution: 'Esri, HERE, Garmin',
+            },
+            'esri-light-labels': {
+              type: 'raster',
+              tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}'],
+              tileSize: 256,
+              attribution: 'Esri, HERE, Garmin',
             },
           },
-          layers: [{ id: 'osm-layer', type: 'raster', source: 'osm-tiles' }],
+          layers: [
+            { id: 'esri-light-base-layer', type: 'raster', source: 'esri-light-base' },
+            { id: 'esri-light-labels-layer', type: 'raster', source: 'esri-light-labels' },
+          ],
         };
       case 'dark':
       default:
-        // CartoDB Dark Matter Raster Tiles (Máxima resiliencia y contraste en modo noche)
+        // 🌙 MODO NOCHE: Esri World Dark Gray Canvas Base + High-Contrast Reference Labels
         return {
           version: 8,
           sources: {
-            'carto-dark-tiles': {
+            'esri-dark-base': {
               type: 'raster',
-              tiles: [
-                'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
-                'https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
-                'https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
-              ],
+              tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}'],
               tileSize: 256,
-              attribution: '&copy; CartoDB &copy; OpenStreetMap contributors',
+              attribution: 'Esri, HERE, Garmin, USGS',
+            },
+            'esri-dark-labels': {
+              type: 'raster',
+              tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}'],
+              tileSize: 256,
+              attribution: 'Esri, HERE, Garmin, USGS',
             },
           },
-          layers: [{ id: 'carto-dark-layer', type: 'raster', source: 'carto-dark-tiles' }],
+          layers: [
+            { id: 'esri-dark-base-layer', type: 'raster', source: 'esri-dark-base' },
+            { id: 'esri-dark-labels-layer', type: 'raster', source: 'esri-dark-labels' },
+          ],
         };
     }
   };
@@ -235,16 +256,26 @@ export const MapLibreMap: React.FC<MapLibreMapProps> = ({
     });
   };
 
-  // 2. Cambio dinámico de Mapa Base
+  // 2. Cambio dinámico de Mapa Base con recarga garantizada
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map || !mapLoaded) return;
-    map.setStyle(getStyleUrl(baseMap) as any);
-    map.once('style.load', () => {
+
+    const rebindLayers = () => {
       setupTerritorialLayers(map);
       setupUserLayers(map);
       setupStateMarkers(map);
-    });
+    };
+
+    map.setStyle(getStyleUrl(baseMap) as any);
+
+    const onStyleData = () => {
+      if (map.isStyleLoaded()) {
+        map.off('styledata', onStyleData);
+        rebindLayers();
+      }
+    };
+    map.on('styledata', onStyleData);
   }, [baseMap]);
 
   // 3. Volar a Estado, Municipio o Localidad cuando cambie la selección
