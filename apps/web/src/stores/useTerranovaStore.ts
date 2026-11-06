@@ -9,37 +9,40 @@ import {
   ProjectEstimation,
   PermitItem,
   PermitRequirement,
+  KPICardData,
+  InfrastructureAssetItem,
 } from '../types';
 import {
   MOCK_ORGANIZATIONS,
-  MOCK_LAYERS,
-  MOCK_PROPERTIES,
-  MOCK_INCIDENTS,
-  MOCK_PROJECTS,
-  MOCK_KPIS,
-  MOCK_INFRASTRUCTURE,
-  MOCK_PERMITS,
-} from './mockData';
+  getTerritoryDataForOrg,
+} from './territoryDataService';
 
 export function useTerranovaStore() {
   const [currentModule, setCurrentModule] = useState<ModuleId>('dashboard');
-  const [currentOrg, setCurrentOrg] = useState<Organization>(MOCK_ORGANIZATIONS[0]);
+  
+  // Default to CDMX or Puebla for rich urban context on first load
+  const initialOrg = MOCK_ORGANIZATIONS.find((o) => o.code === 'GOB-CDMX-09') || MOCK_ORGANIZATIONS[0];
+  const [currentOrg, setCurrentOrg] = useState<Organization>(initialOrg);
+  
   const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
   const [isOnline, setIsOnline] = useState<boolean>(true);
   const [offlinePendingCount, setOfflinePendingCount] = useState<number>(0);
   const [searchQuery, setSearchQuery] = useState<string>('');
-  
-  // GIS Layers
-  const [layers, setLayers] = useState<LayerItem[]>(MOCK_LAYERS);
-  
-  // Incidents Reactive State
-  const [incidents, setIncidents] = useState<IncidentItem[]>(MOCK_INCIDENTS);
 
-  // Projects & Public Works State
-  const [projects, setProjects] = useState<ProjectItem[]>(MOCK_PROJECTS);
+  // Initial territory data
+  const initialData = getTerritoryDataForOrg(initialOrg);
 
-  // Urban Permits & Expedientes State
-  const [permits, setPermits] = useState<PermitItem[]>(MOCK_PERMITS);
+  // Territorial Reactive State
+  const [properties, setProperties] = useState<PropertyItem[]>(initialData.properties);
+  const [incidents, setIncidents] = useState<IncidentItem[]>(initialData.incidents);
+  const [projects, setProjects] = useState<ProjectItem[]>(initialData.projects);
+  const [permits, setPermits] = useState<PermitItem[]>(initialData.permits);
+  const [infrastructureAssets, setInfrastructureAssets] = useState<InfrastructureAssetItem[]>(initialData.infrastructure);
+  const [kpis, setKpis] = useState<KPICardData[]>(initialData.kpis);
+  const [layers, setLayers] = useState<LayerItem[]>(initialData.layers);
+  const [currentCenter, setCurrentCenter] = useState<[number, number]>(initialData.center);
+  const [currentZoom, setCurrentZoom] = useState<number>(initialData.zoom);
+  const [currentStateCve, setCurrentStateCve] = useState<string>(initialData.cve);
 
   // Selection for Inspector Panel
   const [selectedEntity, setSelectedEntity] = useState<{
@@ -49,10 +52,31 @@ export function useTerranovaStore() {
 
   // Notifications
   const [notifications, setNotifications] = useState([
-    { id: '1', title: 'Nueva Incidencia Asignada', desc: 'Fuga de agua en Centro Histórico requiere inspección.', time: 'Hace 10m', unread: true },
-    { id: '2', title: 'Actualización Catastral', desc: '14 predios validados en Sector Angelópolis.', time: 'Hace 45m', unread: true },
-    { id: '3', title: 'Avance de Obra Registrado', desc: 'Curva S de Blvd. Atlixco actualizada al 74%.', time: 'Hace 2h', unread: false },
+    { id: '1', title: 'Nueva Incidencia Asignada', desc: `Fuga de agua en ${initialData.capitalName} requiere inspección inmediata.`, time: 'Hace 10m', unread: true },
+    { id: '2', title: 'Actualización Catastral', desc: `Padrón validado en ${initialData.stateName} con sello SHA-256.`, time: 'Hace 45m', unread: true },
+    { id: '3', title: 'Avance de Obra Registrado', desc: `Curva S actualizada en contrato COP-${initialOrg.code.slice(-3)}-2026-001.`, time: 'Hace 2h', unread: false },
   ]);
+
+  // Reactive synchronizer when organization changes
+  useEffect(() => {
+    const data = getTerritoryDataForOrg(currentOrg);
+    setProperties(data.properties);
+    setIncidents(data.incidents);
+    setProjects(data.projects);
+    setPermits(data.permits);
+    setInfrastructureAssets(data.infrastructure);
+    setKpis(data.kpis);
+    setLayers(data.layers);
+    setCurrentCenter(data.center);
+    setCurrentZoom(data.zoom);
+    setCurrentStateCve(data.cve);
+    setSelectedEntity({ type: null, data: null });
+
+    setNotifications([
+      { id: Date.now().toString(), title: `Territorio Activo: ${currentOrg.name}`, desc: `Sincronizados predios, obras e incidencias de ${data.capitalName}, ${data.stateName}.`, time: 'Justo ahora', unread: true },
+      { id: (Date.now() - 600000).toString(), title: 'Cédulas Catastrales Verificadas', desc: `Marco Geoestadístico INEGI ${data.cve} vinculado a ${currentOrg.crs}.`, time: 'Hace 10m', unread: false },
+    ]);
+  }, [currentOrg.id]);
 
   // Sync theme with document class
   useEffect(() => {
@@ -74,9 +98,9 @@ export function useTerranovaStore() {
     setIsOnline((prev) => {
       const next = !prev;
       if (!next) {
-        setOfflinePendingCount(3); // Simulated queued operations in IndexedDB
+        setOfflinePendingCount(3);
       } else {
-        setTimeout(() => setOfflinePendingCount(0), 1200); // Simulated sync flush
+        setTimeout(() => setOfflinePendingCount(0), 1200);
       }
       return next;
     });
@@ -124,7 +148,6 @@ export function useTerranovaStore() {
     );
   };
 
-  // Projects Actions
   const addProject = (newPrj: ProjectItem) => {
     setProjects((prev) => [newPrj, ...prev]);
     setNotifications((prev) => [
@@ -189,7 +212,6 @@ export function useTerranovaStore() {
     );
   };
 
-  // Permits Actions
   const addPermit = (newPermit: PermitItem) => {
     setPermits((prev) => [newPermit, ...prev]);
     setNotifications((prev) => [
@@ -205,40 +227,41 @@ export function useTerranovaStore() {
   };
 
   const reviewPermit = (
-    permitId: string,
+    id: string,
     status: PermitItem['status'],
-    notes: string,
-    zoning?: PermitItem['zoningComplianceStatus']
+    notes?: string,
+    zoning?: string
   ) => {
     setPermits((prev) =>
       prev.map((p) => {
-        if (p.id !== permitId) return p;
-        const history = [...p.history];
-        history.push({
-          date: new Date().toISOString(),
-          status,
-          note: notes,
-          author: 'Dirección de Desarrollo Urbano',
-        });
+        if (p.id !== id) return p;
+        const history = p.history ? [...p.history] : [];
+        if (notes) {
+          history.push({
+            date: new Date().toISOString(),
+            status,
+            note: notes,
+            author: 'Dirección de Desarrollo Urbano',
+          });
+        }
 
         let issuedAt = p.issuedAt;
         let expiresAt = p.expiresAt;
         let seal = p.officialDigitalSeal;
         let qr = p.qrVerificationCode;
 
-        if (status === 'Aprobado y Sellado' && !seal) {
-          issuedAt = new Date().toISOString();
-          const exp = new Date();
-          exp.setMonth(exp.getMonth() + 24);
-          expiresAt = exp.toISOString();
-          seal = 'c4e7f9a2b1d3085694a1209384756abcdef8901234567fedcba98765432101234';
-          qr = `VERIF-LIC-${p.folio}`;
+        if (status === 'Aprobado y Sellado' && !issuedAt) {
+          issuedAt = new Date().toISOString().split('T')[0];
+          const expYear = new Date().getFullYear() + 2;
+          expiresAt = `${expYear}-12-31`;
+          seal = `hash-${Date.now()}-${p.folio}`;
+          qr = `QR-TERRANOVA-LIC-${p.folio}`;
         }
 
         return {
           ...p,
           status,
-          zoningComplianceStatus: zoning || p.zoningComplianceStatus,
+          pduZoneClassification: zoning || p.pduZoneClassification,
           technicalNotes: notes,
           history,
           issuedAt,
@@ -287,9 +310,10 @@ export function useTerranovaStore() {
     setSelectedEntity,
     notifications,
     setNotifications,
-    kpis: MOCK_KPIS,
+    kpis,
     organizations: MOCK_ORGANIZATIONS,
-    properties: MOCK_PROPERTIES,
+    properties,
+    setProperties,
     incidents,
     setIncidents,
     addIncident,
@@ -304,6 +328,9 @@ export function useTerranovaStore() {
     addPermit,
     reviewPermit,
     updateRequirementStatus,
-    infrastructureAssets: MOCK_INFRASTRUCTURE,
+    infrastructureAssets,
+    currentCenter,
+    currentZoom,
+    currentStateCve,
   };
 }

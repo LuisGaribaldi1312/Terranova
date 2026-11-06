@@ -9,12 +9,14 @@ interface RightInspectorProps {
   };
   onClose: () => void;
   onFocusMap: (coords: [number, number]) => void;
+  isDarkMode?: boolean;
 }
 
 export const RightInspector: React.FC<RightInspectorProps> = ({
   selectedEntity,
   onClose,
   onFocusMap,
+  isDarkMode = true,
 }) => {
   if (!selectedEntity.type || !selectedEntity.data) {
     return null;
@@ -23,14 +25,20 @@ export const RightInspector: React.FC<RightInspectorProps> = ({
   const { type, data } = selectedEntity;
 
   return (
-    <aside className="w-80 border-l border-terranova-800 bg-terranova-900/95 backdrop-blur-md flex flex-col justify-between z-20 shadow-panel-dark animate-in slide-in-from-right duration-200">
+    <aside className={`w-80 border-l flex flex-col justify-between z-20 animate-in slide-in-from-right duration-200 ${
+      isDarkMode 
+        ? 'bg-terranova-900/95 border-terranova-800 text-white shadow-panel-dark' 
+        : 'bg-white/95 border-slate-200 text-slate-800 shadow-xl'
+    }`}>
       {/* Header */}
-      <div className="p-3.5 border-b border-terranova-800 flex items-center justify-between">
+      <div className={`p-3.5 border-b flex items-center justify-between ${
+        isDarkMode ? 'border-terranova-800' : 'border-slate-200'
+      }`}>
         <div className="flex items-center gap-2">
-          {type === 'property' && <Layers className="w-4 h-4 text-terranova-400" />}
-          {type === 'incident' && <AlertTriangle className="w-4 h-4 text-rose-400" />}
-          {type === 'project' && <HardHat className="w-4 h-4 text-amber-400" />}
-          <span className="text-xs font-bold uppercase tracking-wider text-white">
+          {type === 'property' && <Layers className="w-4 h-4 text-emerald-500" />}
+          {type === 'incident' && <AlertTriangle className="w-4 h-4 text-rose-500" />}
+          {type === 'project' && <HardHat className="w-4 h-4 text-amber-500" />}
+          <span className="text-xs font-bold uppercase tracking-wider">
             {type === 'property' && 'Ficha de Predio Catastral'}
             {type === 'incident' && 'Detalle de Incidencia'}
             {type === 'project' && 'Ficha Técnica de Obra'}
@@ -38,7 +46,9 @@ export const RightInspector: React.FC<RightInspectorProps> = ({
         </div>
         <button
           onClick={onClose}
-          className="p-1 rounded-lg hover:bg-terranova-800 text-gray-400 hover:text-white transition-colors"
+          className={`p-1 rounded-lg transition-colors ${
+            isDarkMode ? 'hover:bg-terranova-800 text-gray-400 hover:text-white' : 'hover:bg-slate-100 text-slate-500 hover:text-slate-900'
+          }`}
           title="Cerrar Inspector"
         >
           <X className="w-4 h-4" />
@@ -52,53 +62,59 @@ export const RightInspector: React.FC<RightInspectorProps> = ({
           const prop = data as PropertyItem;
           return (
             <>
-              <div className="p-3 rounded-lg bg-terranova-950/80 border border-terranova-800">
-                <span className="text-[10px] text-terranova-400 font-mono block">Clave Catastral Estandarizada</span>
-                <span className="font-mono font-bold text-sm text-white tracking-wide">{prop.cadastralKey}</span>
+              <div className={`p-3 rounded-lg border ${
+                isDarkMode ? 'bg-terranova-950/80 border-terranova-800' : 'bg-slate-50 border-slate-200'
+              }`}>
+                <span className="text-[10px] text-emerald-500 font-mono block font-bold">Clave Catastral Estandarizada</span>
+                <span className="font-mono font-bold text-sm tracking-wide">{prop.cadastralKey}</span>
               </div>
 
               <div className="space-y-2">
-                <div className="flex justify-between py-1 border-b border-terranova-800/60">
+                <div className={`flex justify-between py-1 border-b ${isDarkMode ? 'border-terranova-800/60 text-gray-300' : 'border-slate-200 text-slate-700'}`}>
                   <span className="text-gray-400">Colonia / Sector</span>
-                  <span className="text-white font-medium">{prop.neighborhood}</span>
+                  <span className="font-medium">{prop.neighborhood}</span>
                 </div>
-                <div className="flex justify-between py-1 border-b border-terranova-800/60">
+                <div className={`flex justify-between py-1 border-b ${isDarkMode ? 'border-terranova-800/60 text-gray-300' : 'border-slate-200 text-slate-700'}`}>
                   <span className="text-gray-400">Superficie Terreno</span>
-                  <span className="text-white font-mono">{prop.landArea.toLocaleString()} m²</span>
+                  <span className="font-mono font-bold">{prop.landArea.toLocaleString()} m²</span>
                 </div>
-                <div className="flex justify-between py-1 border-b border-terranova-800/60">
+                <div className={`flex justify-between py-1 border-b ${isDarkMode ? 'border-terranova-800/60 text-gray-300' : 'border-slate-200 text-slate-700'}`}>
                   <span className="text-gray-400">Superficie Construida</span>
-                  <span className="text-white font-mono">{prop.builtArea.toLocaleString()} m²</span>
+                  <span className="font-mono font-bold">{prop.builtArea.toLocaleString()} m²</span>
                 </div>
-                <div className="flex justify-between py-1 border-b border-terranova-800/60">
+                <div className={`flex justify-between py-1 border-b ${isDarkMode ? 'border-terranova-800/60 text-gray-300' : 'border-slate-200 text-slate-700'}`}>
                   <span className="text-gray-400">Uso de Suelo</span>
-                  <span className="px-2 py-0.5 rounded bg-terranova-800 text-terranova-300 font-medium">
+                  <span className="px-2 py-0.5 rounded font-medium bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
                     {prop.landUse}
                   </span>
                 </div>
-                <div className="flex justify-between py-1 border-b border-terranova-800/60">
+                <div className={`flex justify-between py-1 border-b ${isDarkMode ? 'border-terranova-800/60 text-gray-300' : 'border-slate-200 text-slate-700'}`}>
                   <span className="text-gray-400">Valor Catastral Fiscal</span>
-                  <span className="text-emerald-400 font-mono font-bold">
+                  <span className="text-emerald-500 font-mono font-bold">
                     ${prop.cadastralValue.toLocaleString()} MXN
                   </span>
                 </div>
-                <div className="flex justify-between py-1 border-b border-terranova-800/60">
+                <div className={`flex justify-between py-1 border-b ${isDarkMode ? 'border-terranova-800/60 text-gray-300' : 'border-slate-200 text-slate-700'}`}>
                   <span className="text-gray-400">Estado Administrativo</span>
-                  <span className="text-terranova-400 font-semibold">{prop.status}</span>
+                  <span className="text-emerald-500 font-semibold">{prop.status}</span>
                 </div>
               </div>
 
-              <div className="pt-2">
+              <div className="pt-2 space-y-2">
                 <button
                   onClick={() => onFocusMap(prop.coordinates)}
-                  className="w-full flex items-center justify-center gap-2 py-2 rounded-lg bg-terranova-500 hover:bg-terranova-400 text-terranova-950 font-bold transition-all shadow-glow-tech mb-2"
+                  className="w-full flex items-center justify-center gap-2 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black font-bold transition-all shadow-md"
                 >
                   <MapPin className="w-4 h-4" />
                   Centrar en Visor GIS
                 </button>
                 <button
                   onClick={() => alert(`Generando Cédula Catastral Oficial en PDF para ${prop.cadastralKey}...`)}
-                  className="w-full flex items-center justify-center gap-2 py-2 rounded-lg bg-terranova-800 hover:bg-terranova-700 text-white font-medium border border-terranova-700 transition-colors"
+                  className={`w-full flex items-center justify-center gap-2 py-2 rounded-lg font-medium border transition-colors ${
+                    isDarkMode 
+                      ? 'bg-terranova-800 hover:bg-terranova-700 text-white border-terranova-700' 
+                      : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300'
+                  }`}
                 >
                   <FileText className="w-4 h-4" />
                   Exportar Cédula Catastral (PDF)
@@ -113,9 +129,11 @@ export const RightInspector: React.FC<RightInspectorProps> = ({
           const inc = data as IncidentItem;
           return (
             <>
-              <div className="p-3 rounded-lg bg-terranova-950/80 border border-terranova-800">
+              <div className={`p-3 rounded-lg border ${
+                isDarkMode ? 'bg-terranova-950/80 border-terranova-800' : 'bg-slate-50 border-slate-200'
+              }`}>
                 <div className="flex justify-between items-center mb-1">
-                  <span className="text-[10px] text-terranova-400 font-mono">Folio de Atención</span>
+                  <span className="text-[10px] text-rose-400 font-mono font-bold">Folio de Atención</span>
                   <span className={`px-2 py-0.5 text-[10px] rounded font-bold ${
                     inc.priority === 'Crítica' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40' :
                     inc.priority === 'Alta' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40' :
@@ -124,44 +142,38 @@ export const RightInspector: React.FC<RightInspectorProps> = ({
                     Prioridad {inc.priority}
                   </span>
                 </div>
-                <span className="font-mono font-bold text-sm text-white">{inc.folio}</span>
+                <span className="font-mono font-bold text-sm">{inc.folio}</span>
               </div>
 
               <div>
-                <p className="text-white font-semibold text-sm mb-1">{inc.title}</p>
+                <p className="font-semibold text-sm mb-1">{inc.title}</p>
                 <p className="text-gray-400 text-xs">{inc.neighborhood}</p>
               </div>
 
-              <div className="space-y-2 border-t border-b border-terranova-800/80 py-2">
+              <div className={`space-y-2 border-t border-b py-2 ${
+                isDarkMode ? 'border-terranova-800/80 text-gray-300' : 'border-slate-200 text-slate-700'
+              }`}>
                 <div className="flex justify-between">
                   <span className="text-gray-400">Tipo:</span>
-                  <span className="text-white font-medium">{inc.type}</span>
+                  <span className="font-medium">{inc.type}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-400">Estado Actual:</span>
-                  <span className="text-amber-400 font-bold">{inc.status}</span>
+                  <span className="text-amber-500 font-bold">{inc.status}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-400">Reportado:</span>
-                  <span className="text-gray-300 font-mono">{inc.reportedAt}</span>
+                  <span className="font-mono">{inc.reportedAt.slice(0, 10)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-400">Área Asignada:</span>
-                  <span className="text-white">{inc.assignedDept}</span>
-                </div>
-              </div>
-
-              {/* Photo Evidence Box */}
-              <div className="p-2.5 rounded-lg bg-terranova-800/40 border border-terranova-700/60">
-                <span className="text-[10px] text-gray-400 block mb-1">Evidencia Fotográfica de Campo</span>
-                <div className="h-24 bg-terranova-950 rounded flex items-center justify-center border border-dashed border-terranova-700 text-gray-500 text-[11px]">
-                  <span>Fotografía Georreferenciada</span>
+                  <span>{inc.assignedDept}</span>
                 </div>
               </div>
 
               <button
                 onClick={() => onFocusMap(inc.coordinates)}
-                className="w-full flex items-center justify-center gap-2 py-2 rounded-lg bg-terranova-500 hover:bg-terranova-400 text-terranova-950 font-bold transition-all shadow-glow-tech"
+                className="w-full flex items-center justify-center gap-2 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black font-bold transition-all shadow-md"
               >
                 <MapPin className="w-4 h-4" />
                 Localizar en Mapa
@@ -175,43 +187,47 @@ export const RightInspector: React.FC<RightInspectorProps> = ({
           const prj = data as ProjectItem;
           return (
             <>
-              <div className="p-3 rounded-lg bg-terranova-950/80 border border-terranova-800">
-                <span className="text-[10px] text-terranova-400 font-mono block">Código de Contrato</span>
-                <span className="font-mono font-bold text-sm text-white">{prj.code}</span>
+              <div className={`p-3 rounded-lg border ${
+                isDarkMode ? 'bg-terranova-950/80 border-terranova-800' : 'bg-slate-50 border-slate-200'
+              }`}>
+                <span className="text-[10px] text-amber-500 font-mono font-bold block">Código de Contrato</span>
+                <span className="font-mono font-bold text-sm">{prj.code}</span>
               </div>
 
               <div>
-                <p className="text-white font-semibold text-sm">{prj.name}</p>
+                <p className="font-semibold text-sm">{prj.name}</p>
                 <p className="text-gray-400 text-xs mt-0.5">{prj.contractor}</p>
               </div>
 
-              <div className="p-3 rounded-lg bg-terranova-800/40 border border-terranova-700/60 space-y-2">
+              <div className={`p-3 rounded-lg border space-y-2 ${
+                isDarkMode ? 'bg-terranova-800/40 border-terranova-700/60' : 'bg-slate-50 border-slate-200'
+              }`}>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-400">Avance Físico</span>
-                  <span className="font-mono font-bold text-terranova-400">{prj.progressPercentage}%</span>
+                  <span className="font-mono font-bold text-emerald-500">{prj.progressPercentage}%</span>
                 </div>
-                <div className="w-full bg-terranova-950 rounded-full h-2">
+                <div className={`w-full rounded-full h-2 ${isDarkMode ? 'bg-terranova-950' : 'bg-slate-200'}`}>
                   <div
-                    className="bg-gradient-to-r from-terranova-500 to-emerald-400 h-2 rounded-full"
+                    className="bg-emerald-500 h-2 rounded-full"
                     style={{ width: `${prj.progressPercentage}%` }}
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <div className="flex justify-between py-1 border-b border-terranova-800/60">
+                <div className={`flex justify-between py-1 border-b ${isDarkMode ? 'border-terranova-800/60' : 'border-slate-200'}`}>
                   <span className="text-gray-400 flex items-center gap-1"><DollarSign className="w-3.5 h-3.5" /> Presupuesto</span>
-                  <span className="text-white font-mono">${(prj.budgetAllocated / 1000000).toFixed(1)}M MXN</span>
+                  <span className="font-mono font-bold">${(prj.budgetAllocated / 1000000).toFixed(1)}M MXN</span>
                 </div>
-                <div className="flex justify-between py-1 border-b border-terranova-800/60">
+                <div className={`flex justify-between py-1 border-b ${isDarkMode ? 'border-terranova-800/60' : 'border-slate-200'}`}>
                   <span className="text-gray-400 flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> Plazo</span>
-                  <span className="text-white font-mono">{prj.startDate} - {prj.endDate}</span>
+                  <span className="font-mono">{prj.startDate} - {prj.endDate}</span>
                 </div>
               </div>
 
               <button
                 onClick={() => alert(`Abriendo Bitácora Digital de Obra ${prj.code}...`)}
-                className="w-full flex items-center justify-center gap-2 py-2 rounded-lg bg-terranova-500 hover:bg-terranova-400 text-terranova-950 font-bold transition-all shadow-glow-tech"
+                className="w-full flex items-center justify-center gap-2 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black font-bold transition-all shadow-md"
               >
                 <CheckCircle2 className="w-4 h-4" />
                 Ver Bitácora y Estimaciones

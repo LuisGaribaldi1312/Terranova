@@ -15,8 +15,6 @@ import { AdminView } from '../modules/AdminView';
 import { InfrastructureView } from '../modules/InfrastructureView';
 import { CitizenPortalView } from '../modules/CitizenPortalView';
 import { ProjectsView } from '../modules/ProjectsView';
-
-// Placeholders for remaining modules in Phase 2
 import { PermitsView } from '../modules/PermitsView';
 import { AnalyticsView } from '../modules/AnalyticsView';
 import { AiAssistantView } from '../modules/AiAssistantView';
@@ -72,6 +70,10 @@ export const AppShell: React.FC = () => {
               onSelectIncident={(i) => store.setSelectedEntity({ type: 'incident', data: i })}
               onSelectProject={(p) => store.setSelectedEntity({ type: 'project', data: p })}
               onNavigateToGIS={() => store.setCurrentModule('gis')}
+              center={store.currentCenter}
+              zoom={store.currentZoom}
+              isDarkMode={store.isDarkMode}
+              currentOrg={store.currentOrg}
             />
           )}
 
@@ -85,6 +87,10 @@ export const AppShell: React.FC = () => {
               onSelectIncident={(i) => store.setSelectedEntity({ type: 'incident', data: i })}
               crs={store.currentOrg.crs}
               isDarkMode={store.isDarkMode}
+              currentOrg={store.currentOrg}
+              center={store.currentCenter}
+              zoom={store.currentZoom}
+              defaultStateCve={store.currentStateCve}
             />
           )}
 
@@ -118,7 +124,6 @@ export const AppShell: React.FC = () => {
             <AdminView currentOrg={store.currentOrg} />
           )}
 
-          {/* Additional interactive views for remaining modules */}
           {store.currentModule === 'projects' && (
             <ProjectsView
               projects={store.projects}
@@ -129,7 +134,6 @@ export const AppShell: React.FC = () => {
               onUpdateEstimationStatus={store.updateEstimationStatus}
             />
           )}
-
 
           {store.currentModule === 'infrastructure' && (
             <InfrastructureView
@@ -186,6 +190,7 @@ export const AppShell: React.FC = () => {
           selectedEntity={store.selectedEntity}
           onClose={() => store.setSelectedEntity({ type: null, data: null })}
           onFocusMap={handleFocusMap}
+          isDarkMode={store.isDarkMode}
         />
       </div>
 
@@ -194,7 +199,10 @@ export const AppShell: React.FC = () => {
         crs={store.currentOrg.crs}
         isOnline={store.isOnline}
         offlineCount={store.offlinePendingCount}
+        currentCenter={store.currentCenter}
+        isDarkMode={store.isDarkMode}
       />
     </div>
   );
 };
+export default AppShell;

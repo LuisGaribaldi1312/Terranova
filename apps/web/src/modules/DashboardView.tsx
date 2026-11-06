@@ -2,12 +2,13 @@ import React, { useState } from 'react';
 import { 
   Layers, 
   TrendingUp, 
-  ChevronRight, 
-  Clock, 
-  Maximize2
+  Maximize2,
+  Building,
+  AlertTriangle,
+  HardHat,
 } from 'lucide-react';
 import { MapLibreMap } from '../maps/MapLibreMap';
-import { KPICardData, PropertyItem, IncidentItem, ProjectItem, LayerItem } from '../types';
+import { KPICardData, PropertyItem, IncidentItem, ProjectItem, LayerItem, Organization } from '../types';
 
 interface DashboardViewProps {
   kpis: KPICardData[];
@@ -20,6 +21,10 @@ interface DashboardViewProps {
   onSelectIncident: (i: IncidentItem) => void;
   onSelectProject: (p: ProjectItem) => void;
   onNavigateToGIS: () => void;
+  center?: [number, number];
+  zoom?: number;
+  isDarkMode?: boolean;
+  currentOrg?: Organization;
 }
 
 export const DashboardView: React.FC<DashboardViewProps> = ({
@@ -33,35 +38,80 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onSelectIncident,
   onSelectProject,
   onNavigateToGIS,
+  center = [-99.1332, 19.4326],
+  zoom = 11.5,
+  isDarkMode = true,
+  currentOrg,
 }) => {
   const [activeTab, setActiveTab] = useState<'incidents' | 'properties' | 'projects'>('incidents');
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 space-y-4 gis-grid-bg">
+    <div className={`flex-1 overflow-y-auto p-4 space-y-4 ${isDarkMode ? 'bg-[#07131B] text-terranova-100' : 'bg-slate-100 text-slate-800'}`}>
+      {/* Top Banner: Active Jurisdiction */}
+      <div className={`p-3.5 rounded-xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 ${
+        isDarkMode 
+          ? 'bg-terranova-900/80 border-terranova-700/80' 
+          : 'bg-white border-slate-200 shadow-sm'
+      }`}>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center text-white font-bold shadow-md">
+            🏛️
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className={`text-sm font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                {currentOrg?.name || 'Gobierno Autorizado'}
+              </span>
+              <span className="text-[10px] px-2 py-0.5 rounded-full font-mono font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                {currentOrg?.badge || 'Acreditado'}
+              </span>
+            </div>
+            <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-slate-500'} font-mono`}>
+              Jurisdicción Oficial: {currentOrg?.municipality}, {currentOrg?.state} • {currentOrg?.crs || 'EPSG:6362 (ITRF2008)'}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 self-end sm:self-center">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          <span className={`text-xs font-mono font-semibold ${isDarkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>
+            Núcleo Territorial En Línea
+          </span>
+        </div>
+      </div>
+
       {/* Top Section: Executive KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-3.5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3.5">
         {kpis.map((kpi) => (
           <div
             key={kpi.id}
-            className="p-3.5 rounded-xl bg-terranova-800/50 border border-terranova-700/80 backdrop-blur-md shadow-panel-dark hover:border-terranova-500/60 transition-all group"
+            className={`p-3.5 rounded-xl border transition-all ${
+              isDarkMode 
+                ? 'bg-terranova-900/60 border-terranova-800 hover:border-emerald-500/50 text-white' 
+                : 'bg-white border-slate-200 hover:border-emerald-500/50 shadow-sm text-slate-800'
+            }`}
           >
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[11px] font-semibold text-terranova-200/80 truncate">
+              <span className={`text-[11px] font-semibold truncate ${isDarkMode ? 'text-terranova-300' : 'text-slate-600'}`}>
                 {kpi.label}
               </span>
-              <span className="w-2 h-2 rounded-full bg-terranova-400 group-hover:animate-ping" />
+              <span className="w-2 h-2 rounded-full bg-emerald-400" />
             </div>
             <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-black font-mono text-white tracking-tight">
+              <span className={`text-2xl font-black font-mono tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
                 {kpi.value}
               </span>
             </div>
-            <div className="flex items-center justify-between mt-2 pt-2 border-t border-terranova-800/80 text-[10px]">
-              <span className="text-terranova-300 font-mono flex items-center gap-1">
-                <TrendingUp className="w-3 h-3 text-terranova-400" />
+            <div className={`flex items-center justify-between mt-2 pt-2 border-t text-[10px] ${
+              isDarkMode ? 'border-terranova-800/80' : 'border-slate-100'
+            }`}>
+              <span className="text-emerald-500 font-mono flex items-center gap-1 font-semibold">
+                <TrendingUp className="w-3 h-3 text-emerald-500" />
                 {kpi.change}
               </span>
-              <span className="text-gray-400 truncate max-w-[90px]">{kpi.sublabel}</span>
+              <span className={`truncate max-w-[100px] ${isDarkMode ? 'text-gray-400' : 'text-slate-500'}`}>
+                {kpi.sublabel}
+              </span>
             </div>
           </div>
         ))}
@@ -70,13 +120,27 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       {/* Main Row: Central Interactive GIS Map & Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Interactive Geospatial Console (2 Columns) */}
-        <div className="lg:col-span-2 h-[420px] rounded-2xl bg-terranova-950 border border-terranova-700/90 shadow-panel-dark relative overflow-hidden flex flex-col">
+        <div className={`lg:col-span-2 h-[440px] rounded-2xl border relative overflow-hidden flex flex-col ${
+          isDarkMode 
+            ? 'bg-terranova-950 border-terranova-800 shadow-panel-dark' 
+            : 'bg-white border-slate-200 shadow-sm'
+        }`}>
           {/* Map Top Bar Controls */}
-          <div className="h-11 px-3 border-b border-terranova-800 bg-terranova-900/90 backdrop-blur flex items-center justify-between z-10">
+          <div className={`h-11 px-3 border-b flex items-center justify-between z-10 ${
+            isDarkMode 
+              ? 'bg-terranova-900/90 border-terranova-800 text-white' 
+              : 'bg-slate-50/90 border-slate-200 text-slate-800'
+          }`}>
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-xs font-bold text-white tracking-wide">Visor Cartográfico Territorial Activo</span>
-              <span className="text-[10px] font-mono text-terranova-300 px-1.5 py-0.5 rounded bg-terranova-800">
+              <span className="text-xs font-bold tracking-wide">
+                Visor Cartográfico Territorial: {currentOrg?.municipality || 'Nacional'}
+              </span>
+              <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded border ${
+                isDarkMode 
+                  ? 'bg-terranova-800 text-terranova-300 border-terranova-700' 
+                  : 'bg-slate-200 text-slate-700 border-slate-300'
+              }`}>
                 MapLibre GL JS
               </span>
             </div>
@@ -84,41 +148,51 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <div className="flex items-center gap-2">
               <button
                 onClick={onNavigateToGIS}
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-terranova-800 hover:bg-terranova-700 text-terranova-200 hover:text-white text-xs font-mono transition-colors border border-terranova-700"
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono transition-colors border ${
+                  isDarkMode 
+                    ? 'bg-terranova-800 hover:bg-terranova-700 text-terranova-200 border-terranova-700' 
+                    : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-300 shadow-xs'
+                }`}
                 title="Abrir en pantalla completa de GIS Explorer"
               >
                 <Maximize2 className="w-3.5 h-3.5" />
-                <span>Modo Pantalla Completa</span>
+                <span>Explorador Completo</span>
               </button>
             </div>
           </div>
 
           {/* Real WebGL / Raster MapLibre Map Container */}
-          <div className="flex-1 relative bg-[#091824] overflow-hidden">
+          <div className="flex-1 relative overflow-hidden">
             <MapLibreMap
-              baseMap="dark"
+              baseMap={isDarkMode ? 'dark' : 'voyager'}
               layers={layers}
               properties={properties}
               incidents={incidents}
               activeTool="pan"
               onSelectProperty={onSelectProperty}
               onSelectIncident={onSelectIncident}
-              center={[-98.2062, 19.0438]}
-              zoom={13.0}
+              center={center}
+              zoom={zoom}
             />
 
             {/* Floating Layers Pill on Map */}
-            <div className="absolute bottom-3 left-3 bg-terranova-900/95 backdrop-blur border border-terranova-700/80 rounded-xl p-2 shadow-panel-dark flex items-center gap-1.5 text-xs z-10">
-              <Layers className="w-3.5 h-3.5 text-terranova-400 mr-1" />
-              <div className="flex gap-1 overflow-x-auto max-w-[460px]">
+            <div className={`absolute bottom-3 left-3 backdrop-blur border rounded-xl p-2 flex items-center gap-1.5 text-xs z-10 ${
+              isDarkMode 
+                ? 'bg-terranova-900/95 border-terranova-700 text-white shadow-panel-dark' 
+                : 'bg-white/95 border-slate-200 text-slate-800 shadow-md'
+            }`}>
+              <Layers className="w-3.5 h-3.5 text-emerald-400 mr-1" />
+              <div className="flex gap-1 overflow-x-auto max-w-[420px]">
                 {layers.slice(0, 5).map((l) => (
                   <button
                     key={l.id}
                     onClick={() => onToggleLayer(l.id)}
                     className={`px-2 py-1 rounded text-[10px] font-mono transition-all ${
                       l.active
-                        ? 'bg-terranova-500 text-terranova-950 font-bold shadow-glow-tech'
-                        : 'bg-terranova-800 text-gray-400 hover:text-white'
+                        ? 'bg-emerald-500 text-slate-950 font-bold shadow-xs'
+                        : isDarkMode
+                        ? 'bg-terranova-800 text-gray-400 hover:text-white'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                     }`}
                   >
                     {l.name.split(' ')[0]} ({l.count})
@@ -128,271 +202,177 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
 
             {/* Quick Map Legend */}
-            <div className="absolute top-3 right-3 bg-terranova-900/90 backdrop-blur border border-terranova-800 rounded-lg p-2 text-[10px] font-mono text-gray-300 space-y-1">
+            <div className={`absolute top-3 right-3 backdrop-blur border rounded-lg p-2 text-[10px] font-mono space-y-1 ${
+              isDarkMode 
+                ? 'bg-terranova-900/90 border-terranova-800 text-gray-300' 
+                : 'bg-white/90 border-slate-200 text-slate-700 shadow-xs'
+            }`}>
               <div className="flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 bg-emerald-500/80 border border-emerald-400" />
-                <span>Predio Catastral Registrado</span>
+                <span>Predio Catastral</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
-                <span>Incidencia Activa (Bache/Fuga)</span>
+                <span>Incidencia 072</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-1 border-t-2 border-dashed border-amber-400" />
-                <span>Polígono de Obra Pública</span>
+                <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+                <span>Obra Pública Activa</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Right Column: Live Territorial Feed & Critical Alerts */}
-        <div className="h-[420px] rounded-2xl bg-terranova-900/90 border border-terranova-700/90 p-4 shadow-panel-dark flex flex-col justify-between">
-          <div className="flex items-center justify-between pb-2 border-b border-terranova-800">
-            <span className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
-              <Clock className="w-4 h-4 text-terranova-400" />
-              Actividad Territorial Reciente
-            </span>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-terranova-800 text-terranova-300">
-              En Vivo
-            </span>
+        {/* Right Tabbed Panel: Incidencias, Predios, Obras */}
+        <div className={`rounded-2xl border flex flex-col h-[440px] overflow-hidden ${
+          isDarkMode 
+            ? 'bg-terranova-950 border-terranova-800 shadow-panel-dark' 
+            : 'bg-white border-slate-200 shadow-sm'
+        }`}>
+          {/* Tabs Header */}
+          <div className={`h-11 border-b flex items-center px-2 gap-1 ${
+            isDarkMode ? 'bg-terranova-900/70 border-terranova-800' : 'bg-slate-50 border-slate-200'
+          }`}>
+            {[
+              { id: 'incidents', label: '072 Servicios', count: incidents.length, icon: AlertTriangle },
+              { id: 'properties', label: 'Predios', count: properties.length, icon: Building },
+              { id: 'projects', label: 'Obras', count: projects.length, icon: HardHat },
+            ].map((tab) => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as any)}
+                  className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-mono font-medium flex items-center justify-center gap-1.5 transition-all ${
+                    isActive
+                      ? isDarkMode
+                        ? 'bg-terranova-800 text-white font-bold border border-terranova-700'
+                        : 'bg-white text-slate-900 font-bold border border-slate-200 shadow-xs'
+                      : isDarkMode
+                      ? 'text-gray-400 hover:text-white hover:bg-terranova-800/40'
+                      : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
+                  }`}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  <span>{tab.label}</span>
+                  <span className={`text-[10px] px-1 rounded-full ${
+                    isActive 
+                      ? 'bg-emerald-500 text-black font-bold' 
+                      : isDarkMode ? 'bg-terranova-900 text-gray-400' : 'bg-slate-200 text-slate-600'
+                  }`}>
+                    {tab.count}
+                  </span>
+                </button>
+              );
+            })}
           </div>
 
-          <div className="flex-1 overflow-y-auto space-y-3 py-3 divide-y divide-terranova-800/50">
-            {incidents.slice(0, 3).map((inc) => (
-              <div
-                key={inc.id}
-                onClick={() => onSelectIncident(inc)}
-                className="pt-2 text-left cursor-pointer hover:bg-terranova-800/40 p-2 rounded-lg transition-colors group"
-              >
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-[10px] font-mono text-terranova-400 font-semibold">{inc.folio}</span>
-                  <span className="text-[9px] text-gray-400 font-mono">{inc.reportedAt}</span>
-                </div>
-                <p className="text-xs font-medium text-white group-hover:text-terranova-300 transition-colors">
-                  {inc.title}
-                </p>
-                <div className="flex items-center justify-between mt-1 text-[10px] text-gray-400">
-                  <span>{inc.neighborhood}</span>
-                  <span className="text-amber-400 font-bold">{inc.status}</span>
-                </div>
-              </div>
-            ))}
-
-            {projects.slice(0, 1).map((prj) => (
-              <div
-                key={prj.id}
-                onClick={() => onSelectProject(prj)}
-                className="pt-2 text-left cursor-pointer hover:bg-terranova-800/40 p-2 rounded-lg transition-colors group"
-              >
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-[10px] font-mono text-amber-400 font-semibold">{prj.code}</span>
-                  <span className="text-[9px] text-emerald-400 font-mono">{prj.progressPercentage}% Avance</span>
-                </div>
-                <p className="text-xs font-medium text-white group-hover:text-terranova-300 transition-colors">
-                  {prj.name}
-                </p>
-                <div className="w-full bg-terranova-950 rounded-full h-1.5 mt-2">
-                  <div
-                    className="bg-emerald-400 h-1.5 rounded-full"
-                    style={{ width: `${prj.progressPercentage}%` }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <button
-            onClick={() => alert('Abriendo Bitácora Global de Operaciones y Auditoría...')}
-            className="w-full py-2 rounded-lg bg-terranova-800/80 hover:bg-terranova-800 text-terranova-200 hover:text-white font-medium text-xs border border-terranova-700/80 flex items-center justify-center gap-1 transition-all"
-          >
-            <span>Ver Toda la Actividad del Municipio</span>
-            <ChevronRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      </div>
-
-      {/* Bottom Section: Multi-Domain Data Table */}
-      <div className="rounded-2xl bg-terranova-900/90 border border-terranova-700/90 shadow-panel-dark overflow-hidden">
-        {/* Table Tabs */}
-        <div className="flex items-center justify-between px-4 border-b border-terranova-800 bg-terranova-950/60">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setActiveTab('incidents')}
-              className={`py-3 px-3 text-xs font-semibold border-b-2 transition-all ${
-                activeTab === 'incidents'
-                  ? 'border-terranova-500 text-white'
-                  : 'border-transparent text-gray-400 hover:text-gray-200'
-              }`}
-            >
-              Mesa de Control de Incidencias ({incidents.length})
-            </button>
-            <button
-              onClick={() => setActiveTab('properties')}
-              className={`py-3 px-3 text-xs font-semibold border-b-2 transition-all ${
-                activeTab === 'properties'
-                  ? 'border-terranova-500 text-white'
-                  : 'border-transparent text-gray-400 hover:text-gray-200'
-              }`}
-            >
-              Catastro de Predios Urbanos ({properties.length})
-            </button>
-            <button
-              onClick={() => setActiveTab('projects')}
-              className={`py-3 px-3 text-xs font-semibold border-b-2 transition-all ${
-                activeTab === 'projects'
-                  ? 'border-terranova-500 text-white'
-                  : 'border-transparent text-gray-400 hover:text-gray-200'
-              }`}
-            >
-              Obras Públicas en Curso ({projects.length})
-            </button>
-          </div>
-        </div>
-
-        {/* Tab 1: Incidents Table */}
-        {activeTab === 'incidents' && (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-gray-300">
-              <thead className="bg-terranova-950/80 text-[10px] font-mono text-terranova-300 uppercase tracking-wider">
-                <tr>
-                  <th className="py-2.5 px-4">Folio Oficial</th>
-                  <th className="py-2.5 px-4">Incidencia / Problema</th>
-                  <th className="py-2.5 px-4">Colonia / Ubicación</th>
-                  <th className="py-2.5 px-4">Prioridad</th>
-                  <th className="py-2.5 px-4">Estado</th>
-                  <th className="py-2.5 px-4">Dependencia</th>
-                  <th className="py-2.5 px-4 text-right">Acción</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-terranova-800/60 font-sans">
+          {/* List Content */}
+          <div className="flex-1 overflow-y-auto p-2.5 space-y-2">
+            {activeTab === 'incidents' && (
+              <div className="space-y-2">
                 {incidents.map((inc) => (
-                  <tr
+                  <div
                     key={inc.id}
                     onClick={() => onSelectIncident(inc)}
-                    className="hover:bg-terranova-800/40 transition-colors cursor-pointer"
+                    className={`p-2.5 rounded-xl border transition-all cursor-pointer ${
+                      isDarkMode 
+                        ? 'bg-terranova-900/60 border-terranova-800 hover:border-emerald-500/60' 
+                        : 'bg-slate-50 border-slate-200 hover:border-emerald-500/60 hover:bg-slate-100'
+                    }`}
                   >
-                    <td className="py-2.5 px-4 font-mono font-bold text-white">{inc.folio}</td>
-                    <td className="py-2.5 px-4 font-medium text-white">{inc.title}</td>
-                    <td className="py-2.5 px-4 text-gray-400">{inc.neighborhood}</td>
-                    <td className="py-2.5 px-4">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                        inc.priority === 'Crítica' ? 'bg-rose-500/20 text-rose-400' :
-                        inc.priority === 'Alta' ? 'bg-amber-500/20 text-amber-400' : 'bg-sky-500/20 text-sky-400'
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[10px] font-mono font-bold text-rose-400">
+                        {inc.folio}
+                      </span>
+                      <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-mono ${
+                        inc.priority === 'Crítica' || inc.priority === 'Alta' 
+                          ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' 
+                          : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
                       }`}>
                         {inc.priority}
                       </span>
-                    </td>
-                    <td className="py-2.5 px-4 font-semibold text-terranova-400">{inc.status}</td>
-                    <td className="py-2.5 px-4 text-gray-400">{inc.assignedDept}</td>
-                    <td className="py-2.5 px-4 text-right">
-                      <button className="px-2 py-1 rounded bg-terranova-800 hover:bg-terranova-700 text-white text-[11px] font-mono">
-                        Ver Ficha
-                      </button>
-                    </td>
-                  </tr>
+                    </div>
+                    <p className={`text-xs font-semibold line-clamp-1 ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>
+                      {inc.title}
+                    </p>
+                    <div className={`flex items-center justify-between mt-1 text-[10px] ${isDarkMode ? 'text-gray-400' : 'text-slate-500'}`}>
+                      <span>{inc.neighborhood}</span>
+                      <span className="text-emerald-400 font-mono">SLA {inc.slaHours}h</span>
+                    </div>
+                  </div>
                 ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+              </div>
+            )}
 
-        {/* Tab 2: Properties Table */}
-        {activeTab === 'properties' && (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-gray-300">
-              <thead className="bg-terranova-950/80 text-[10px] font-mono text-terranova-300 uppercase tracking-wider">
-                <tr>
-                  <th className="py-2.5 px-4">Clave Catastral</th>
-                  <th className="py-2.5 px-4">Colonia</th>
-                  <th className="py-2.5 px-4">Uso de Suelo</th>
-                  <th className="py-2.5 px-4">Área Terreno</th>
-                  <th className="py-2.5 px-4">Área Constr.</th>
-                  <th className="py-2.5 px-4">Valor Catastral</th>
-                  <th className="py-2.5 px-4 text-right">Acción</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-terranova-800/60 font-sans">
+            {activeTab === 'properties' && (
+              <div className="space-y-2">
                 {properties.map((prop) => (
-                  <tr
+                  <div
                     key={prop.id}
                     onClick={() => onSelectProperty(prop)}
-                    className="hover:bg-terranova-800/40 transition-colors cursor-pointer"
+                    className={`p-2.5 rounded-xl border transition-all cursor-pointer ${
+                      isDarkMode 
+                        ? 'bg-terranova-900/60 border-terranova-800 hover:border-emerald-500/60' 
+                        : 'bg-slate-50 border-slate-200 hover:border-emerald-500/60 hover:bg-slate-100'
+                    }`}
                   >
-                    <td className="py-2.5 px-4 font-mono font-bold text-white">{prop.cadastralKey}</td>
-                    <td className="py-2.5 px-4 text-gray-400">{prop.neighborhood}</td>
-                    <td className="py-2.5 px-4">
-                      <span className="px-2 py-0.5 rounded bg-terranova-800 text-terranova-300 text-[11px]">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[10px] font-mono font-bold text-emerald-400">
+                        {prop.cadastralKey}
+                      </span>
+                      <span className="text-[9px] px-1.5 py-0.5 rounded font-mono bg-sky-500/20 text-sky-400">
                         {prop.landUse}
                       </span>
-                    </td>
-                    <td className="py-2.5 px-4 font-mono">{prop.landArea} m²</td>
-                    <td className="py-2.5 px-4 font-mono">{prop.builtArea} m²</td>
-                    <td className="py-2.5 px-4 font-mono font-semibold text-emerald-400">
-                      ${prop.cadastralValue.toLocaleString()} MXN
-                    </td>
-                    <td className="py-2.5 px-4 text-right">
-                      <button className="px-2 py-1 rounded bg-terranova-800 hover:bg-terranova-700 text-white text-[11px] font-mono">
-                        Cédula
-                      </button>
-                    </td>
-                  </tr>
+                    </div>
+                    <p className={`text-xs font-semibold truncate ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>
+                      {prop.street}
+                    </p>
+                    <div className={`flex items-center justify-between mt-1 text-[10px] font-mono ${isDarkMode ? 'text-gray-400' : 'text-slate-500'}`}>
+                      <span>{prop.neighborhood}</span>
+                      <span className="text-white font-bold">${prop.cadastralValue.toLocaleString()} MXN</span>
+                    </div>
+                  </div>
                 ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+              </div>
+            )}
 
-        {/* Tab 3: Projects Table */}
-        {activeTab === 'projects' && (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-gray-300">
-              <thead className="bg-terranova-950/80 text-[10px] font-mono text-terranova-300 uppercase tracking-wider">
-                <tr>
-                  <th className="py-2.5 px-4">Código Obra</th>
-                  <th className="py-2.5 px-4">Descripción del Proyecto</th>
-                  <th className="py-2.5 px-4">Contratista</th>
-                  <th className="py-2.5 px-4">Presupuesto</th>
-                  <th className="py-2.5 px-4">Avance Físico</th>
-                  <th className="py-2.5 px-4">Vigencia</th>
-                  <th className="py-2.5 px-4 text-right">Acción</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-terranova-800/60 font-sans">
-                {projects.map((prj) => (
-                  <tr
-                    key={prj.id}
-                    onClick={() => onSelectProject(prj)}
-                    className="hover:bg-terranova-800/40 transition-colors cursor-pointer"
+            {activeTab === 'projects' && (
+              <div className="space-y-2">
+                {projects.map((proj) => (
+                  <div
+                    key={proj.id}
+                    onClick={() => onSelectProject(proj)}
+                    className={`p-2.5 rounded-xl border transition-all cursor-pointer ${
+                      isDarkMode 
+                        ? 'bg-terranova-900/60 border-terranova-800 hover:border-emerald-500/60' 
+                        : 'bg-slate-50 border-slate-200 hover:border-emerald-500/60 hover:bg-slate-100'
+                    }`}
                   >
-                    <td className="py-2.5 px-4 font-mono font-bold text-white">{prj.code}</td>
-                    <td className="py-2.5 px-4 font-medium text-white">{prj.name}</td>
-                    <td className="py-2.5 px-4 text-gray-400">{prj.contractor}</td>
-                    <td className="py-2.5 px-4 font-mono text-emerald-400">
-                      ${(prj.budgetAllocated / 1000000).toFixed(1)}M MXN
-                    </td>
-                    <td className="py-2.5 px-4">
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono font-bold text-white">{prj.progressPercentage}%</span>
-                        <div className="w-16 bg-terranova-950 rounded-full h-1.5">
-                          <div
-                            className="bg-emerald-400 h-1.5 rounded-full"
-                            style={{ width: `${prj.progressPercentage}%` }}
-                          />
-                        </div>
-                      </div>
-                    </td>
-                    <td className="py-2.5 px-4 font-mono text-gray-400">{prj.startDate} - {prj.endDate}</td>
-                    <td className="py-2.5 px-4 text-right">
-                      <button className="px-2 py-1 rounded bg-terranova-800 hover:bg-terranova-700 text-white text-[11px] font-mono">
-                        Bitácora
-                      </button>
-                    </td>
-                  </tr>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[10px] font-mono font-bold text-amber-400">
+                        {proj.code}
+                      </span>
+                      <span className="text-[9px] px-1.5 py-0.5 rounded font-mono bg-emerald-500/20 text-emerald-400 font-bold">
+                        {proj.progressPercentage}% Avance
+                      </span>
+                    </div>
+                    <p className={`text-xs font-semibold line-clamp-1 ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>
+                      {proj.name}
+                    </p>
+                    <div className={`flex items-center justify-between mt-1 text-[10px] ${isDarkMode ? 'text-gray-400' : 'text-slate-500'}`}>
+                      <span className="font-mono">{proj.fundingSource || 'FAISMUN'}</span>
+                      <span className="font-mono font-bold text-emerald-400">
+                        ${(proj.budgetAllocated / 1000000).toFixed(1)}M MXN
+                      </span>
+                    </div>
+                  </div>
                 ))}
-              </tbody>
-            </table>
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

@@ -290,9 +290,66 @@ export const MapLibreMap: React.FC<MapLibreMapProps> = ({
       }
     }
 
-    // Si se deselecciona, volver a vista de la República Mexicana
-    map.flyTo({ center: [-102.5528, 23.6345], zoom: 5.0, speed: 1.0 });
-  }, [selectedStateCve, selectedMunCve, selectedLocCve, mapLoaded]);
+    // Si no hay filtro local, volar al centro territorial especificado
+    map.flyTo({ center, zoom, speed: 1.2 });
+  }, [selectedStateCve, selectedMunCve, selectedLocCve, center[0], center[1], zoom, mapLoaded]);
+
+  // 3b. Actualizar dinámicamente predios e incidencias al cambiar la organización o datos
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map || !mapLoaded) return;
+
+    const parcelsSource = map.getSource('terranova-parcels-source') as GeoJSONSource;
+    if (parcelsSource) {
+      const parcelFeatures = properties.map((prop, idx) => {
+        const offset = idx * 0.002;
+        return {
+          type: 'Feature',
+          properties: {
+            id: prop.id,
+            cadastralKey: prop.cadastralKey,
+            landUse: prop.landUse,
+            cadastralValue: prop.cadastralValue,
+            owner: prop.owner,
+            neighborhood: prop.neighborhood,
+          },
+          geometry: prop.polygonVertices ? {
+            type: 'Polygon',
+            coordinates: [[...prop.polygonVertices, prop.polygonVertices[0]]],
+          } : {
+            type: 'Polygon',
+            coordinates: [[
+              [prop.coordinates[0] - 0.001 - offset, prop.coordinates[1] - 0.001],
+              [prop.coordinates[0] + 0.001 - offset, prop.coordinates[1] - 0.001],
+              [prop.coordinates[0] + 0.001 - offset, prop.coordinates[1] + 0.001],
+              [prop.coordinates[0] - 0.001 - offset, prop.coordinates[1] + 0.001],
+              [prop.coordinates[0] - 0.001 - offset, prop.coordinates[1] - 0.001],
+            ]],
+          },
+        };
+      });
+      parcelsSource.setData({ type: 'FeatureCollection', features: parcelFeatures as any });
+    }
+
+    const incidentsSource = map.getSource('terranova-incidents-source') as GeoJSONSource;
+    if (incidentsSource) {
+      const incidentFeatures = incidents.map((inc) => ({
+        type: 'Feature',
+        properties: {
+          id: inc.id,
+          folio: inc.folio,
+          title: inc.title,
+          priority: inc.priority,
+          type: inc.type,
+        },
+        geometry: {
+          type: 'Point',
+          coordinates: inc.coordinates,
+        },
+      }));
+      incidentsSource.setData({ type: 'FeatureCollection', features: incidentFeatures as any });
+    }
+  }, [properties, incidents, mapLoaded]);
 
   // 4. Configurar Capas del Marco Geoestadístico Nacional (MGN INEGI)
   const setupTerritorialLayers = (map: MapLibreInstance) => {

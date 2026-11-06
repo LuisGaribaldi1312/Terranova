@@ -22,6 +22,9 @@ export interface Organization {
   municipality: string;
   badge: string;
   crs: string; // EPSG:6362, EPSG:32614, etc.
+  cve_ent?: string;
+  center?: [number, number];
+  zoom?: number;
 }
 
 export interface UserProfile {
