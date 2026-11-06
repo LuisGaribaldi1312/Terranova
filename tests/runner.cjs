@@ -40,6 +40,25 @@ function createExpect(actual) {
         throw new Error(`Expected length ${expected} but got ${actual ? actual.length : actual}`);
       }
     },
+    toThrow(expected) {
+      if (typeof actual !== 'function') {
+        throw new Error(`toThrow requires a function, got ${typeof actual}`);
+      }
+      let threw = false;
+      let error = null;
+      try {
+        actual();
+      } catch (err) {
+        threw = true;
+        error = err;
+      }
+      if (!threw) {
+        throw new Error('Expected function to throw, but it did not throw');
+      }
+      if (expected && error && !error.message.includes(expected)) {
+        throw new Error(`Expected error to contain "${expected}" but got "${error.message}"`);
+      }
+    },
     toContain(expected) {
       if (typeof actual === 'string' || Array.isArray(actual)) {
         if (!actual.includes(expected)) {

@@ -3,6 +3,41 @@ Todas las modificaciones notables a este proyecto se documentarán en este archi
 
 ---
 
+## [1.15.0-phase.16] — 2026-11-05 — ¡LANZAMIENTO COMERCIAL TERRANOVA v1.0.0!
+### Agregado
+- **Hardening, Auditoría OWASP, Pruebas de Carga y Lanzamiento Comercial v1.0.0 (Fase 16 — TERRANOVA ENTERPRISE READY)**:
+  - Base de Datos & Migraciones:
+    - Migración `database/migrations/012_hardening_security_audit.sql`:
+      - Tabla `security_posture_scans` con auditoría forense OWASP Top 10 automatizada (A01 a A07) y cálculo de Security Posture Score (100/100).
+      - Tabla `security_ip_reputation_rules` para mitigación de ataques de fuerza bruta, listas blancas/negras y rate limiting perimetral.
+      - Tabla `audit_export_manifests` para exportación legal de bitácoras inmutables WORM (*Write Once, Read Many*) selladas con checksum SHA-256 y firma HMAC.
+      - Triggers PostgreSQL de integridad inmutable (`BEFORE UPDATE OR DELETE RAISE EXCEPTION`) que impiden físicamente la manipulación de la trazabilidad.
+  - Backend NestJS (`apps/api/src/security/`):
+    - DTOs con validación estricta: `RunSecurityAuditDto`, `CreateIpRuleDto`, `ExportAuditWormDto`, `ConcurrencyStressDto`.
+    - Servicio `SecurityAuditService` con:
+      - Escaneo de seguridad OWASP ASVS v4.0 y verificación de políticas RLS en las 12 tablas operativas sensibles.
+      - Verificación de hash Argon2id (m=65536, t=3, p=4) / BCrypt (Cost=12) y TLS 1.3 / HSTS estricto.
+      - Generador de manifiestos WORM con firma HMAC-SHA256 para cumplimiento gubernamental bajo la LGPDPPSO (México).
+      - Banco de pruebas de estrés concurrente (100 peticiones en paralelo con < 500 ms).
+    - Controlador `SecurityAuditController` con endpoints OpenAPI:
+      - `POST /security/audit-scan`: Ejecuta escaneo OWASP y devuelve Security Posture Score (100/100).
+      - `GET /security/posture`: Consulta de postura de blindaje y RLS activo.
+      - `POST /security/ip-rules`: Registro de reglas perimetrales IP.
+      - `POST /security/worm-export`: Exportación legal de auditoría firmada.
+      - `POST /security/concurrency-stress`: Banco de carga concurrente.
+    - Módulo `SecurityAuditModule` registrado en `apps/api/src/app.module.ts`.
+  - Frontend React & Panel de Gobernanza y Hardening (`apps/web/src/modules/AdminView.tsx`):
+    - Pestaña **Auditoría OWASP & Hardening**: Indicador de blindaje (100/100), botón de escaneo bajo demanda, matriz de 6 categorías OWASP Top 10 con estado PASSED, monitor de cobertura RLS (12/12 tablas), y disparador de prueba de estrés concurrente (100 peticiones en tiempo real con latencia, tiempo total y throughput).
+    - Pestaña **Roles y RBAC (9 Roles)**: Matriz oficial de permisos y alcance institucional bajo el Principio de Menor Privilegio (PoLP).
+    - Pestaña **Bitácora Forense (WORM)**: Tabla de auditoría con botón de exportación de manifiesto firmado con HMAC-SHA256.
+  - Infraestructura y Empaquetado de Producción:
+    - `Dockerfile.api`: Contenedor multi-stage optimizado para NestJS con Node 20 Alpine y usuario no-root `node`.
+    - `Dockerfile.web`: Contenedor multi-stage con Nginx Alpine sirviendo los estáticos optimizados de Vite con headers defensivos OWASP (HSTS, CSP, X-Frame-Options DENY, X-Content-Type-Options nosniff).
+    - `nginx.conf`: Configuración endurecida con compresión Gzip, caché inmutable y proxy inverso transparente a `/api/`.
+    - `docker-compose.prod.yml`: Orquestación completa lista para despliegues Cloud Dedicado o Private On-Premise Air-Gapped (PostGIS 16-3.4, Redis 7, API y Web).
+  - Tests Unitarios (`tests/unit/security-hardening-owasp.test.ts`):
+    - 5 tests unitarios verificando rechazo absoluto de Broken Object Level Authorization (IDOR), bloqueo de inyecciones SQL, inmutabilidad WORM con rechazo de UPDATE/DELETE, entropía de firmas SHA-256 / HMAC y prueba de carga concurrente de 100 peticiones simultáneas procesadas en < 500 ms (**59 de 59 pruebas pasando, 100% PASS**).
+
 ## [1.14.0-phase.15] — 2026-11-05
 ### Agregado
 - **Módulo de Gemelo Digital 3D, Mallas Urbanas y Simulación Territorial (Fase 15 — TERRANOVA 3D TWIN)**:

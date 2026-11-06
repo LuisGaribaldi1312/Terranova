@@ -1,0 +1,48 @@
+# ============================================================================
+# TERRANOVA API — DOCKERFILE MULTI-STAGE DE PRODUCCIÓN (HARDENED)
+# Cumplimiento: CIS Docker Benchmark / OWASP Container Security
+# ============================================================================
+
+# Stage 1: Build
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Instalar dependencias del monorepo
+COPY package*.json ./
+COPY apps/api/package*.json ./apps/api/
+COPY packages/shared/package*.json ./packages/shared/
+
+RUN npm ci
+
+# Copiar código fuente
+COPY apps/api/ ./apps/api/
+COPY packages/shared/ ./packages/shared/
+COPY tsconfig*.json ./
+
+# Compilar NestJS a JavaScript optimizado
+RUN npm run build --workspace=@terranova/api
+
+# Stage 2: Runtime de Producción (Minimalista & No-Root)
+FROM node:20-alpine AS runner
+
+WORKDIR /app
+ENV NODE_ENV=production
+ENV PORT=3000
+
+# Añadir usuario no-root por seguridad
+USER node
+
+# Copiar artefactos compilados y dependencias mínimas
+COPY --chown=node:node --from=builder /app/package*.json ./
+COPY --chown=node:node --from=builder /app/node_modules ./node_modules
+COPY --chown=node:node --from=builder /app/apps/api/dist ./apps/api/dist
+COPY --chown=node:node --from=builder /app/apps/api/package.json ./apps/api/
+
+EXPOSE 3000
+
+# Healthcheck interno del contenedor
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1
+
+CMD ["node", "apps/api/dist/main.js"]
