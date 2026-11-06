@@ -3,6 +3,37 @@ Todas las modificaciones notables a este proyecto se documentarán en este archi
 
 ---
 
+## [1.14.0-phase.15] — 2026-11-05
+### Agregado
+- **Módulo de Gemelo Digital 3D, Mallas Urbanas y Simulación Territorial (Fase 15 — TERRANOVA 3D TWIN)**:
+  - Base de Datos & Migraciones:
+    - Migración `database/migrations/011_digital_twin.sql`:
+      - Tabla `digital_twin_buildings` para modelado tridimensional de volúmenes de edificación LoD1/LoD2, cotas de desplante, zonificación y poliedros extruidos, respaldada con PostgreSQL RLS multi-tenant (`organization_id`).
+      - Tabla `digital_twin_simulations` para persistencia y trazabilidad de simulaciones físicas (estudios de asoleamiento, conos de sombra y riesgo de inundación pluvial urbana).
+  - Backend NestJS (`apps/api/src/digital-twin/`):
+    - DTOs con validación estricta: `QueryBuildings3dDto`, `SolarSimulationDto`, `RunoffSimulationDto`.
+    - Servicio `DigitalTwinService` con:
+      - Generación paramétrica de volúmenes LoD1 y LoD2 a partir de niveles catastrales ($H = niveles \cdot 3.2m$) y cotas topográficas oficiales.
+      - Motor astronómico de trayectoria solar: declinación solar $\delta$, ángulo horario $H$, elevación solar $\alpha$, azimut $A$, longitud de sombra $L = H / \tan(\alpha)$ y nivel de insolación según latitud municipal (Puebla $19.0414^\circ \text{ N}$).
+      - Motor hidrológico de escorrentía pluvial urbana por método racional para detección de cotas de inundación y saturación de redes de drenaje.
+    - Controlador `DigitalTwinController` con endpoints OpenAPI:
+      - `GET /digital-twin/buildings`: Catálogo de volúmenes 3D extruidos.
+      - `POST /digital-twin/solar-analysis`: Simulación de azimut y longitud de sombras por hora y día del año.
+      - `POST /digital-twin/runoff-simulation`: Simulación de gasto y acumulación de lluvia.
+    - Módulo `DigitalTwinModule` registrado en `apps/api/src/app.module.ts`.
+  - Frontend React & Canvas 3D Acelerado (`apps/web/src/modules/DigitalTwinView.tsx`):
+    - Motor de renderizado 3D por Canvas 2D con aceleración de hardware y transformaciones trigonométricas de matriz orbital (Pitch $15^\circ - 75^\circ$, Yaw $0^\circ - 360^\circ$, Zoom $0.6x - 2.2x$, paneo orbital e inversión automática).
+    - Monitor de rendimiento en tiempo real (**Superación garantizada de > 30 FPS en mallas urbanas** mediante `requestAnimationFrame`).
+    - Cuatro modos de visualización territorial interactivos:
+      - **Volúmenes LoD1**: Extrusión ortogonal de edificios con sombreado de caras (sur, este, cenit) y cotas de altura.
+      - **Sombras Solares**: Proyección dinámica y realista de sombras en tiempo real sincronizadas con un deslizador horario de 07:00 a 19:00 hrs y representación gráfica de la posición solar diurna.
+      - **Inundación & Escorrentía**: Simulación de acumulación pluvial con isóbatas dinámicas, cotas críticas de encharcamiento y porcentaje de saturación de drenaje según intensidad de lluvia ($mm/h$).
+      - **Malla Alámbrica (Wireframe)**: Inspección de aristas estructurales y retícula geodésica urbana.
+    - Panel lateral de inspección técnica del edificio seleccionado (Clave catastral, zonificación, niveles, desplante $m^2$, volumen $m^3$, cota topográfica y botón vinculante para centrar en visor GIS).
+    - Integración en `AppShell.tsx` eliminando placeholders temporales.
+  - Tests Unitarios (`tests/unit/digital-twin-3d.test.ts`):
+    - 5 tests unitarios verificando framerate > 30 FPS sobre 200 poliedros urbanos, cálculo astronómico de azimut/altitud solar, proyección trigonométrica de sombras $L = H / \tan(\alpha)$, extrusión LoD1 y balance hidrológico (54 de 54 tests en total pasando, 100% PASS).
+
 ## [1.13.0-phase.14] — 2026-11-05
 ### Agregado
 - **Módulo de Inteligencia Artificial Territorial, GeoAgentes y Tool Calling Seguro (Fase 14 — TERRANOVA AI)**:

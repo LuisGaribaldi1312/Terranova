@@ -20,7 +20,7 @@ import { ProjectsView } from '../modules/ProjectsView';
 import { PermitsView } from '../modules/PermitsView';
 import { AnalyticsView } from '../modules/AnalyticsView';
 import { AiAssistantView } from '../modules/AiAssistantView';
-import { Box } from 'lucide-react';
+import { DigitalTwinView } from '../modules/DigitalTwinView';
 
 export const AppShell: React.FC = () => {
   const store = useTerranovaStore();
@@ -157,15 +157,7 @@ export const AppShell: React.FC = () => {
           )}
 
           {store.currentModule === 'digital-twin' && (
-            <div className="flex-1 p-6 overflow-y-auto space-y-4 gis-grid-bg">
-              <div className="bg-terranova-900/90 border border-terranova-700 p-4 rounded-2xl shadow-panel-dark">
-                <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                  <Box className="w-5 h-5 text-purple-400" />
-                  Módulo 10: TERRANOVA DIGITAL TWIN — Gemelo Digital 3D
-                </h2>
-                <p className="text-xs text-gray-400">Modelado tridimensional del territorio, mallas urbanas, simulación de sombras y escorrentías.</p>
-              </div>
-            </div>
+            <DigitalTwinView onFocusMap={handleFocusMap} />
           )}
 
           {store.currentModule === 'ai' && (
