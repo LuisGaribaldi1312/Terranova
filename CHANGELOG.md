@@ -3,6 +3,36 @@ Todas las modificaciones notables a este proyecto se documentarán en este archi
 
 ---
 
+## [1.13.0-phase.14] — 2026-11-05
+### Agregado
+- **Módulo de Inteligencia Artificial Territorial, GeoAgentes y Tool Calling Seguro (Fase 14 — TERRANOVA AI)**:
+  - Base de Datos & Migraciones:
+    - Migración `database/migrations/010_ai_geoagents.sql`:
+      - Creación de tabla `ai_conversations` para gestión de sesiones de chat geoespaciales multi-agente con políticas RLS multi-tenant por `organization_id`.
+      - Creación de tabla `ai_messages` para almacenamiento de mensajes, citas oficiales y acciones vinculantes.
+      - Creación de tabla `ai_tool_executions` para auditoría forense inmutable de cada invocación de herramientas controladas (**garantía de CERO SQL ARBITRARIO**).
+  - Backend NestJS (`apps/api/src/ai/`):
+    - DTOs con validación: `ChatMessageDto`, `ToolCallRecordDto`, `OfficialCitationDto` y `SuggestedActionDto`.
+    - Servicio `AiService` con validador estricto anti SQL Injection, enrutador autónomo de intenciones y catálogo de GeoAgentes especializados:
+      - `ProjectAgent`: Obras públicas, avance Curva S, estimaciones FAISMUN y contratos federales.
+      - `UrbanAgent`: Catastro, avalúo predial, zonificación PDU, coeficientes COS/CUS y licencias DRO.
+      - `IncidentAgent`: Reportes 072, semáforos de SLA y rendimiento de cuadrillas operativas.
+      - `InfraAgent`: Redes municipales de agua potable, alumbrado y depreciación de activos.
+      - `GeoAgent`: Cartografía oficial INEGI MGN y proyecciones geodésicas EPSG:6362 y UTM Zona 14N.
+    - Controlador `AiController` con endpoints OpenAPI: `POST /ai/chat`, `GET /ai/agents` y `GET /ai/suggestions`.
+    - Módulo `AiModule` registrado en `apps/api/src/app.module.ts`.
+  - Frontend React & Asistente Conversacional Geoespacial (`apps/web/src/modules/AiAssistantView.tsx`):
+    - Selector dinámico de especialista (Enrutador Autónomo vs. GeoAgent, UrbanAgent, IncidentAgent, ProjectAgent, InfraAgent).
+    - Canvas de mensajes interactivo con desglose de **Tool Call ejecutado** (parámetros tipados y tiempo de respuesta en ms).
+    - Bloque de **Fuentes Oficiales & Normatividad Vinculante** (citas obligatorias al MGN INEGI, PDU Municipal y leyes estatales).
+    - Botones de acción rápida vinculantes (ej. *Ver Gráfica de Curva S*, *Centrar Predio en Catastro*, *Enfocar Tramo en Mapa GIS*).
+    - Barra de sugerencias con preguntas rápidas de un clic y validación preventiva en cliente contra inyección SQL.
+    - Conexión e integración completa en `AppShell.tsx`.
+  - Pruebas Unitarias y Certificación de Calidad:
+    - Suite de pruebas en `tests/unit/ai-geoagents.test.ts` con validación del criterio innegociable de aceptación (**bloqueo total de SQL arbitrario**), clasificación temática de intenciones, Tool Calling seguro tipado, presencia obligatoria de citas oficiales y aislamiento multi-tenant estricto (49/49 tests aprobados al 100%).
+
+---
+
 ## [1.12.0-phase.13] — 2026-11-05
 ### Agregado
 - **Módulo de Inteligencia Territorial, Mapas de Calor y Business Intelligence (Fase 13 — TERRANOVA ANALYTICS & BI)**:

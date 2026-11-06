@@ -19,7 +19,8 @@ import { ProjectsView } from '../modules/ProjectsView';
 // Placeholders for remaining modules in Phase 2
 import { PermitsView } from '../modules/PermitsView';
 import { AnalyticsView } from '../modules/AnalyticsView';
-import { Box, Bot } from 'lucide-react';
+import { AiAssistantView } from '../modules/AiAssistantView';
+import { Box } from 'lucide-react';
 
 export const AppShell: React.FC = () => {
   const store = useTerranovaStore();
@@ -168,15 +169,13 @@ export const AppShell: React.FC = () => {
           )}
 
           {store.currentModule === 'ai' && (
-            <div className="flex-1 p-6 overflow-y-auto space-y-4 gis-grid-bg">
-              <div className="bg-terranova-900/90 border border-terranova-700 p-4 rounded-2xl shadow-panel-dark">
-                <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                  <Bot className="w-5 h-5 text-terranova-400" />
-                  Módulo 11: TERRANOVA AI — Inteligencia Territorial y GeoAgentes
-                </h2>
-                <p className="text-xs text-gray-400">Asistente agéntico para consultas territoriales en lenguaje natural (GeoAgent, UrbanAgent, InfraAgent).</p>
-              </div>
-            </div>
+            <AiAssistantView
+              properties={store.properties}
+              incidents={store.incidents}
+              projects={store.projects}
+              onFocusMap={handleFocusMap}
+              onNavigateModule={(mod) => store.setCurrentModule(mod as any)}
+            />
           )}
 
           {store.currentModule === 'analytics' && (

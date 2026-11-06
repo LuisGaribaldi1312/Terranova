@@ -14,6 +14,7 @@ import { GisModule } from './gis/gis.module';
 import { CitizenModule } from './citizen/citizen.module';
 import { PermitsModule } from './permits/permits.module';
 import { AnalyticsModule } from './analytics/analytics.module';
+import { AiModule } from './ai/ai.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { AnalyticsModule } from './analytics/analytics.module';
     CitizenModule,
     PermitsModule,
     AnalyticsModule,
+    AiModule,
   ],
 })
 export class AppModule {}
