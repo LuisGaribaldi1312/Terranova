@@ -3,6 +3,7 @@ import * as maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { PropertyItem, IncidentItem, LayerItem } from '../types';
 import { calculateGeodesicDistance, calculatePolygonArea } from './spatialMath';
+import { TerritorialCompatibilityViewer } from './TerritorialCompatibilityViewer';
 import {
   MexicanState,
   MexicanMunicipality,
@@ -63,7 +64,18 @@ export const MapLibreMap: React.FC<MapLibreMapProps> = ({
   const markersRef = useRef<maplibregl.Marker[]>([]);
   const [measurementPoints, setMeasurementPoints] = useState<[number, number][]>([]);
   const [mapLoaded, setMapLoaded] = useState(false);
-  const [mapError, setMapError] = useState<string | null>(null);
+
+  // Detección proactiva de aceleración WebGL en el navegador cliente
+  const [useFallback, setUseFallback] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    try {
+      const canvas = document.createElement('canvas');
+      const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+      return !gl;
+    } catch {
+      return true;
+    }
+  });
 
   // Estilos de MapLibre: Motores Raster de Alta Disponibilidad Global sin Bloqueos ni Marcas de Agua
   const getStyleUrl = (style: BaseMapStyle) => {
@@ -171,7 +183,9 @@ export const MapLibreMap: React.FC<MapLibreMapProps> = ({
 
   // 1. Inicializar el mapa MapLibre GL JS
   useEffect(() => {
-    if (!mapContainerRef.current) return;
+    if (useFallback || !mapContainerRef.current) return;
+    let isMounted = true;
+    let ro: ResizeObserver | null = null;
 
     try {
       const map = new maplibregl.Map({
@@ -184,10 +198,20 @@ export const MapLibreMap: React.FC<MapLibreMapProps> = ({
         attributionControl: false,
       });
 
+      // Escuchar pérdida de contexto WebGL para alternar al visor 2D sin romper la experiencia
+      const canvas = map.getCanvas();
+      const onContextLost = (e: Event) => {
+        e.preventDefault();
+        console.warn('MapLibre WebGL Context Lost: activando visor territorial de alta compatibilidad.');
+        if (isMounted) setUseFallback(true);
+      };
+      canvas?.addEventListener('webglcontextlost', onContextLost);
+
       map.addControl(new maplibregl.NavigationControl({ showCompass: true }), 'top-right');
       map.addControl(new maplibregl.ScaleControl({ unit: 'metric' }), 'bottom-left');
 
       map.on('load', () => {
+        if (!isMounted) return;
         mapInstanceRef.current = map;
         setMapLoaded(true);
         map.resize();
@@ -196,7 +220,7 @@ export const MapLibreMap: React.FC<MapLibreMapProps> = ({
         setupStateMarkers(map);
 
         setTimeout(() => {
-          if (mapInstanceRef.current) {
+          if (mapInstanceRef.current && isMounted) {
             mapInstanceRef.current.resize();
           }
         }, 200);
@@ -207,7 +231,7 @@ export const MapLibreMap: React.FC<MapLibreMapProps> = ({
       });
 
       // ResizeObserver para garantizar que el lienzo WebGL se ajuste siempre al 100%
-      const ro = new ResizeObserver(() => {
+      ro = new ResizeObserver(() => {
         if (mapInstanceRef.current) {
           mapInstanceRef.current.resize();
         }
@@ -216,17 +240,26 @@ export const MapLibreMap: React.FC<MapLibreMapProps> = ({
 
       // Cleanup
       return () => {
-        ro.disconnect();
+        isMounted = false;
+        if (ro) ro.disconnect();
         markersRef.current.forEach((m) => m.remove());
         markersRef.current = [];
-        map.remove();
+        try {
+          const gl = canvas?.getContext('webgl') || canvas?.getContext('experimental-webgl');
+          if (gl && (gl as any).getExtension?.('WEBGL_lose_context')) {
+            (gl as any).getExtension('WEBGL_lose_context')?.loseContext();
+          }
+          map.remove();
+        } catch (cleanupErr) {
+          console.warn('Error en limpieza WebGL:', cleanupErr);
+        }
         mapInstanceRef.current = null;
       };
     } catch (err: any) {
-      console.error('Error inicializando MapLibre:', err);
-      setMapError('Error de contexto WebGL. Activando visor territorial de alta compatibilidad.');
+      console.warn('Fallo de inicialización WebGL. Activando Visor Territorial 2D:', err);
+      if (isMounted) setUseFallback(true);
     }
-  }, []);
+  }, [useFallback]);
 
   const setupStateMarkers = (map: MapLibreInstance) => {
     // Limpiar marcadores previos
@@ -791,16 +824,36 @@ export const MapLibreMap: React.FC<MapLibreMapProps> = ({
     source.setData({ type: 'FeatureCollection', features });
   };
 
+  // Si WebGL no está disponible o el contexto se perdió, renderizar el Visor de Alta Compatibilidad 2D
+  if (useFallback) {
+    return (
+      <TerritorialCompatibilityViewer
+        baseMap={baseMap}
+        layers={layers}
+        properties={properties}
+        incidents={incidents}
+        activeTool={activeTool}
+        onSelectProperty={onSelectProperty}
+        onSelectIncident={onSelectIncident}
+        onMeasurementUpdate={onMeasurementUpdate}
+        selectedStateCve={selectedStateCve}
+        selectedMunCve={selectedMunCve}
+        selectedLocCve={selectedLocCve}
+        onSelectState={onSelectState}
+        onSelectMunicipality={onSelectMunicipality}
+        onSelectLocality={onSelectLocality}
+        center={center}
+        zoom={zoom}
+        onRetryWebGL={() => {
+          setUseFallback(false);
+        }}
+      />
+    );
+  }
+
   return (
     <div className="w-full h-full relative">
       <div ref={mapContainerRef} className="w-full h-full" />
-      {mapError && (
-        <div className="absolute inset-0 bg-terranova-950/90 flex items-center justify-center p-6 text-center z-30">
-          <div className="p-4 rounded-xl bg-terranova-900 border border-terranova-700 text-xs text-terranova-300 font-mono">
-            {mapError}
-          </div>
-        </div>
-      )}
     </div>
   );
 };
