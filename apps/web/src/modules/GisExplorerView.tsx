@@ -29,6 +29,7 @@ interface GisExplorerViewProps {
   onSelectProperty: (p: PropertyItem) => void;
   onSelectIncident: (i: IncidentItem) => void;
   crs?: string;
+  isDarkMode?: boolean;
 }
 
 export const GisExplorerView: React.FC<GisExplorerViewProps> = ({
@@ -39,10 +40,16 @@ export const GisExplorerView: React.FC<GisExplorerViewProps> = ({
   onSelectProperty,
   onSelectIncident,
   crs = 'EPSG:32614 (UTM Zona 14N)',
+  isDarkMode = true,
 }) => {
-  const [activeBaseMap, setActiveBaseMap] = useState<BaseMapStyle>('dark');
+  const [activeBaseMap, setActiveBaseMap] = useState<BaseMapStyle>(isDarkMode ? 'dark' : 'voyager');
   const [activeTool, setActiveTool] = useState<GisToolMode>('pan');
   const [measurementInfo, setMeasurementInfo] = useState<{ type: 'distance' | 'area'; value: string } | null>(null);
+
+  // Sincronizar basemap con modo día/noche
+  React.useEffect(() => {
+    setActiveBaseMap(isDarkMode ? 'dark' : 'voyager');
+  }, [isDarkMode]);
 
   // Jerarquía Territorial INEGI (Marco Geoestadístico Nacional - MGN)
   const [selectedStateCve, setSelectedStateCve] = useState<string>(''); // Vacío = República Mexicana
@@ -301,28 +308,41 @@ export const GisExplorerView: React.FC<GisExplorerViewProps> = ({
 
           {/* Selector de Cartografía Base */}
           <div className="pt-2 border-t border-terranova-800">
-            <span className="text-[10px] font-mono text-terranova-400 uppercase tracking-wider block mb-2 font-bold">
-              Cartografía Base (Resiliente 100%)
+            <span className="text-[10px] font-mono text-terranova-400 uppercase tracking-wider block mb-2 font-bold flex items-center justify-between">
+              <span>Cartografía Base Oficial</span>
+              <span className="text-[9px] text-emerald-400 font-normal">5 Motores</span>
             </span>
-            <div className="grid grid-cols-3 gap-1.5">
+            <div className="grid grid-cols-2 gap-1.5 mb-1.5">
               {[
-                { id: 'dark', label: 'Dark GIS' },
-                { id: 'sat', label: 'Satélite' },
-                { id: 'osm', label: 'OpenStreet' },
+                { id: 'voyager', label: '☀️ Día (Voyager)', desc: 'Calles & relieve' },
+                { id: 'dark', label: '🌙 Noche (Dark)', desc: 'Alto contraste' },
+                { id: 'topo', label: '🛣️ Topo (Esri)', desc: 'Vialidades y toponimia' },
+                { id: 'osm', label: '🗺️ OpenStreet', desc: 'Comunidad OSM' },
               ].map((map) => (
                 <button
                   key={map.id}
                   onClick={() => setActiveBaseMap(map.id as any)}
-                  className={`py-1.5 rounded text-[10px] font-mono border transition-all ${
+                  className={`p-1.5 rounded-lg text-[10px] font-mono text-left border transition-all ${
                     activeBaseMap === map.id
-                      ? 'bg-terranova-500 text-terranova-950 font-bold border-terranova-400 shadow-glow-tech'
-                      : 'bg-terranova-800/60 text-gray-400 border-terranova-700 hover:text-white'
+                      ? 'bg-emerald-500 text-black font-bold border-emerald-400 shadow-glow-tech'
+                      : 'bg-terranova-800/60 text-gray-300 border-terranova-700 hover:text-white hover:bg-terranova-800'
                   }`}
                 >
-                  {map.label}
+                  <p className="font-bold leading-tight">{map.label}</p>
+                  <p className={`text-[8px] truncate ${activeBaseMap === map.id ? 'text-black/80' : 'text-gray-400'}`}>{map.desc}</p>
                 </button>
               ))}
             </div>
+            <button
+              onClick={() => setActiveBaseMap('sat')}
+              className={`w-full py-1.5 rounded-lg text-[10px] font-mono text-center border transition-all ${
+                activeBaseMap === 'sat'
+                  ? 'bg-emerald-500 text-black font-bold border-emerald-400 shadow-glow-tech'
+                  : 'bg-terranova-800/60 text-gray-300 border-terranova-700 hover:text-white hover:bg-terranova-800'
+              }`}
+            >
+              🛰️ Satelital HD (Esri World Imagery)
+            </button>
           </div>
 
           {/* Proyección Cartográfica Activa */}

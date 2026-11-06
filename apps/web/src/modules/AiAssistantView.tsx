@@ -12,6 +12,16 @@ import {
   Cpu,
 } from 'lucide-react';
 import { PropertyItem, IncidentItem, ProjectItem } from '../types';
+import {
+  MEXICAN_STATES,
+  MEXICAN_MUNICIPALITIES,
+  MEXICAN_LOCALITIES,
+} from '../maps/mexicoGeoData';
+import {
+  MOCK_INFRASTRUCTURE,
+  MOCK_PERMITS,
+  MOCK_ORGANIZATIONS,
+} from '../stores/mockData';
 
 interface AiAssistantViewProps {
   properties: PropertyItem[];
@@ -39,6 +49,9 @@ interface ChatMessage {
 }
 
 export const AiAssistantView: React.FC<AiAssistantViewProps> = ({
+  properties,
+  incidents,
+  projects,
   onFocusMap,
   onNavigateModule,
 }) => {
@@ -73,11 +86,15 @@ export const AiAssistantView: React.FC<AiAssistantViewProps> = ({
     scrollToBottom();
   }, [messages, isTyping]);
 
-  // Lista de prompts rápidos de un clic
+    // Lista de prompts rápidos de un clic enriquecida con cobertura nacional
   const suggestionPrompts = [
     {
-      agent: 'INCIDENT_AGENT',
-      text: '¿Cuáles colonias presentan mayor concentración de baches críticos?',
+      agent: 'GEO_AGENT',
+      text: 'Información geoespacial y municipios del Estado de Jalisco.',
+    },
+    {
+      agent: 'GEO_AGENT',
+      text: 'Dime los datos catastrales y geográficos de Nuevo León y Monterrey.',
     },
     {
       agent: 'URBAN_AGENT',
@@ -88,12 +105,16 @@ export const AiAssistantView: React.FC<AiAssistantViewProps> = ({
       text: 'Dame el estatus de amortización y avance de Curva S del contrato COP-PUE-2026-003.',
     },
     {
-      agent: 'INFRA_AGENT',
-      text: '¿Qué tramos de agua potable en el Centro Histórico tienen vida útil menor al 20%?',
+      agent: 'INCIDENT_AGENT',
+      text: '¿Cuáles colonias presentan mayor concentración de baches críticos y qué SLA tienen?',
     },
     {
-      agent: 'GEO_AGENT',
-      text: 'Verifica los parámetros de proyección cartográfica EPSG:6362 y colindancias del MGN.',
+      agent: 'INFRA_AGENT',
+      text: '¿Qué activos de agua potable e iluminación tienen vida útil menor al 25%?',
+    },
+    {
+      agent: 'SEC_AGENT',
+      text: '¿Cómo garantiza TERRANOVA el aislamiento Multi-Tenant y la seguridad OWASP?',
     },
   ];
 
@@ -135,151 +156,430 @@ export const AiAssistantView: React.FC<AiAssistantViewProps> = ({
     }, 600);
   };
 
-  // Motor de respuesta simulada por GeoAgente
-  const generateAgentResponse = (query: string, requestedAgent: string): ChatMessage => {
+// Motor de Inteligencia Territorial Profunda de TERRANOVA AI
+  const generateAgentResponse = (query: string, _requestedAgent?: string): ChatMessage => {
     const q = query.toLowerCase();
     const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-    // Enrutamiento si está en AUTO_ROUTER
-    let agentToUse = requestedAgent;
-    if (agentToUse === 'AUTO_ROUTER') {
-      if (q.includes('contrato') || q.includes('obra') || q.includes('curva s') || q.includes('estimacion')) {
-        agentToUse = 'PROJECT_AGENT';
-      } else if (q.includes('predio') || q.includes('cos') || q.includes('cus') || q.includes('pdu') || q.includes('licencia') || q.includes('zonificacion')) {
-        agentToUse = 'URBAN_AGENT';
-      } else if (q.includes('bache') || q.includes('fuga') || q.includes('sla') || q.includes('incidencia') || q.includes('072')) {
-        agentToUse = 'INCIDENT_AGENT';
-      } else if (q.includes('agua') || q.includes('luminaria') || q.includes('poste') || q.includes('tuberia') || q.includes('infraestructura')) {
-        agentToUse = 'INFRA_AGENT';
-      } else {
-        agentToUse = 'GEO_AGENT';
-      }
+    // 1. RECONOCIMIENTO TERRITORIAL DE LOS 32 ESTADOS DE MÉXICO
+    const matchedState = MEXICAN_STATES.find(
+      (s) => q.includes(s.name.toLowerCase()) || 
+             q.includes(s.shortName.toLowerCase().replace('.', '')) ||
+             (s.cve_ent === '09' && (q.includes('cdmx') || q.includes('ciudad de mexico') || q.includes('ciudad de méxico') || q.includes('distrito federal')))
+    );
+
+    if (matchedState) {
+      const stateMuns = MEXICAN_MUNICIPALITIES.filter((m) => m.cve_ent === matchedState.cve_ent);
+      const stateLocs = MEXICAN_LOCALITIES.filter((l) => l.cve_ent === matchedState.cve_ent);
+
+      return {
+        id: `agent-${Date.now()}`,
+        sender: 'AGENT',
+        agentName: 'GeoAgent',
+        agentRole: 'Especialista en Marco Geoestadístico Nacional (MGN) & Cartografía INEGI',
+        content: `### 🇲🇽 Ficha Territorial Oficial: ${matchedState.name} (Clave INEGI: ${matchedState.cve_ent})\n\n` +
+          `• **Capital / Sede del Ejecutivo:** ${matchedState.capital}\n` +
+          `• **División Política:** **${matchedState.municipalityCount} Municipios** reconocidos por el INEGI.\n` +
+          `• **Centro Geodésico:** Longitud \`${matchedState.center[0]}\`, Latitud \`${matchedState.center[1]}\` (Zoom oficial: ${matchedState.zoom}).\n` +
+          `• **Bounding Box Geográfico:** [\`${matchedState.bbox.join(', ')}\`].\n` +
+          `• **Municipios Clave Registrados en TERRANOVA:**\n` +
+          stateMuns.map(m => `  - **${m.name}** (Clave: \`${m.cve_geo}\`, Población: ${m.population.toLocaleString()} hab., ${m.localityCount} localidades)`).join('\n') +
+          `\n\n• **Toponimia & Localidades Principales:** ${stateLocs.slice(0, 3).map(l => `${l.name} (${l.type})`).join(', ')}.\n` +
+          `• **Proyección Cartográfica:** Sistema Oficial **EPSG:6362 (ITRF2008 / LCC)** con transformación conforme para la República Mexicana.`,
+        toolCall: {
+          name: 'query_mgn_state_dossier',
+          args: { cve_ent: matchedState.cve_ent, stateName: matchedState.name, includeMunicipalities: true },
+          executionTimeMs: 12,
+          status: 'SUCCESS',
+        },
+        citations: [
+          { source: 'Instituto Nacional de Estadística y Geografía (INEGI)', reference: `Marco Geoestadístico Nacional (MGN) 2026 - Entidad ${matchedState.cve_ent}` },
+          { source: 'Norma Técnica para el Sistema Geodésico Nacional', reference: 'Acuerdo DOF EPSG:6362 ITRF2008' },
+        ],
+        actions: [
+          { label: `🇲🇽 Explorar ${matchedState.shortName} en Mapa GIS`, actionType: 'FOCUS_MAP', payload: matchedState.center },
+          { label: 'Ir a Explorador GIS', actionType: 'NAVIGATE_GIS' },
+        ],
+        timestamp: nowTime,
+      };
     }
 
-    if (agentToUse === 'PROJECT_AGENT') {
+    // 2. RECONOCIMIENTO DE MUNICIPIOS DE MÉXICO
+    const matchedMun = MEXICAN_MUNICIPALITIES.find(
+      (m) => q.includes(m.name.toLowerCase()) || q.includes(m.headquarters.toLowerCase())
+    );
+
+    if (matchedMun) {
+      const parentState = MEXICAN_STATES.find((s) => s.cve_ent === matchedMun.cve_ent);
+      const munLocs = MEXICAN_LOCALITIES.filter((l) => l.cve_ent === matchedMun.cve_ent && l.cve_mun === matchedMun.cve_mun);
+
+      return {
+        id: `agent-${Date.now()}`,
+        sender: 'AGENT',
+        agentName: 'GeoAgent',
+        agentRole: 'Especialista en Municipios & Marco Geoestadístico INEGI',
+        content: `### 🏛️ Municipio: ${matchedMun.name} (${parentState?.name || ''})\n\n` +
+          `• **Clave MGN Oficial:** \`${matchedMun.cve_geo}\` (Entidad: ${matchedMun.cve_ent}, Municipio: ${matchedMun.cve_mun}).\n` +
+          `• **Cabecera Municipal:** ${matchedMun.headquarters}\n` +
+          `• **Población Censal:** **${matchedMun.population.toLocaleString()} habitantes**.\n` +
+          `• **Localidades Oficiales:** ${matchedMun.localityCount} localidades registradas.\n` +
+          `• **Localidades Destacadas en TERRANOVA:**\n` +
+          munLocs.map(l => `  - **${l.name}** (Clave: \`${l.cve_geo}\`, Tipo: ${l.type}, Población: ${l.population.toLocaleString()} hab.)`).join('\n') +
+          `\n• **Coordenadas Centroide:** [\`${matchedMun.center[0]}, ${matchedMun.center[1]}\`].`,
+        toolCall: {
+          name: 'query_mgn_municipality_dossier',
+          args: { cve_geo: matchedMun.cve_geo, municipalityName: matchedMun.name },
+          executionTimeMs: 10,
+          status: 'SUCCESS',
+        },
+        citations: [
+          { source: 'Catálogo Único de Claves Geoestadísticas (INEGI)', reference: `Registro Oficial Clave ${matchedMun.cve_geo}` },
+          { source: 'Ley Orgánica Municipal', reference: 'Gobierno y Administración Territorial' },
+        ],
+        actions: [
+          { label: `📍 Centrar ${matchedMun.name} en Mapa`, actionType: 'FOCUS_MAP', payload: matchedMun.center },
+          { label: 'Ver Capas Catastrales', actionType: 'NAVIGATE_GIS' },
+        ],
+        timestamp: nowTime,
+      };
+    }
+
+    // 3. CONSULTAS CATASTRALES Y PREDIALES
+    if (q.includes('predio') || q.includes('catastro') || q.includes('avaluo') || q.includes('avalúo') || q.includes('clave catastral') || q.includes('predial')) {
+      const sampleProp = properties[0] || {
+        cadastralKey: '21-114-001-042-0012',
+        neighborhood: 'Col. La Paz',
+        landArea: 420.5,
+        builtArea: 280.0,
+        cadastralValue: 3450000,
+        landUse: 'Habitacional',
+      };
+      const annualTax = Math.round(sampleProp.cadastralValue * 0.0018);
+      const prontoPago = Math.round(annualTax * 0.85);
+
+      return {
+        id: `agent-${Date.now()}`,
+        sender: 'AGENT',
+        agentName: 'UrbanAgent',
+        agentRole: 'Especialista en Catastro Multifinalitario & Valuación Predial',
+        content: `### 📐 Padrón Catastral & Valuación de Inmuebles\n\n` +
+          `Actualmente TERRANOVA administra **${properties.length} predios georreferenciados** con polígonos topológicos cerrados:\n\n` +
+          `• **Predio de Referencia:** Clave \`${sampleProp.cadastralKey}\` (${sampleProp.neighborhood}).\n` +
+          `• **Uso de Suelo:** **${sampleProp.landUse}** (Zonificación PDU compatible).\n` +
+          `• **Superficie Terreno:** ${sampleProp.landArea} m² | **Construcción:** ${sampleProp.builtArea} m².\n` +
+          `• **Avalúo Catastral Vigente:** **$${sampleProp.cadastralValue.toLocaleString()} MXN**.\n` +
+          `• **Cálculo de Impuesto Predial Anual:** $${annualTax.toLocaleString()} MXN (Tasa alícuota: 1.8 al millar).\n` +
+          `• **Pronto Pago con Descuento (15%):** **$${prontoPago.toLocaleString()} MXN** con Línea de Captura Módulo 10.\n` +
+          `• **Sello Digital SHA-256:** Cédula certificada con firma inmutable de 64 caracteres.`,
+        toolCall: {
+          name: 'query_cadastral_registry',
+          args: { sampleKey: sampleProp.cadastralKey, calculateTax: true },
+          executionTimeMs: 11,
+          status: 'SUCCESS',
+        },
+        citations: [
+          { source: 'Ley de Catastro y Valuación del Estado', reference: 'Art. 28 (Valuación Arancelaria por Zonas Homogéneas)' },
+          { source: 'Código Fiscal Municipal 2026', reference: 'Capítulo IV: Impuesto Sobre Bienes Inmuebles' },
+        ],
+        actions: [
+          { label: 'Ver Padrón Catastral Completo', actionType: 'NAVIGATE_PROPERTIES' },
+          { label: 'Centrar Predio en Mapa', actionType: 'FOCUS_MAP', payload: [-98.2285, 19.0512] },
+        ],
+        timestamp: nowTime,
+      };
+    }
+
+    // 4. CONSULTAS DE OBRAS PÚBLICAS Y CONTRATOS (FAISMUN / FORTAMUN / CURVA S)
+    if (q.includes('contrato') || q.includes('obra') || q.includes('curva s') || q.includes('estimacion') || q.includes('estimación') || q.includes('anticipo') || q.includes('faismun')) {
+      const proj = projects[0];
+      const contractNum = proj?.contractNumber || 'COP-PUE-2026-003';
+      const projName = proj?.name || 'Rehabilitación Integral de Red Hidrosanitaria en Av. Juárez';
+      const projBudget = proj?.budgetAllocated || 48500000;
+      const physicalProgress = proj?.physicalProgressReal ?? proj?.progressPercentage ?? 74;
+      const scheduledProgress = proj?.physicalProgressPlanned ?? 78;
+      const contractorName = proj?.contractor || 'Infraestructuras y Pavimentos del Altiplano S.A. de C.V.';
+      const fundingSource = proj?.fundingSource || 'FAISMUN 2026';
+
+      const advanceAmortized = Math.round(projBudget * 0.30 * (physicalProgress / 100));
+      const millarRetention = Math.round(projBudget * (physicalProgress / 100) * 0.005);
+
       return {
         id: `agent-${Date.now()}`,
         sender: 'AGENT',
         agentName: 'ProjectAgent',
         agentRole: 'Especialista en Supervisión de Obra Pública & Finanzas Federales',
-        content:
-          'Se evaluó el contrato **COP-PUE-2026-003** (*"Rehabilitación Integral de Red Hidrosanitaria en Av. Juárez"*), financiado con fondos federales **FAISMUN 2026** ($48,500,000.00 MXN asignados).\n\n• **Avance Físico:** Real **74.0%** vs Programado **78.0%** (-4.0% de atraso físico en frentes de obra).\n• **Avance Financiero:** **$28,615,000.00 MXN liquidados** en 3 estimaciones con un 30% de amortización de anticipo ($8.58M amortizados) y retención 5 al millar ($143,075 MXN).\n• **Estimación #4:** En proceso de validación en Tesorería por un importe bruto de $7,275,000.00 MXN.',
+        content: `### 🏗️ Contrato de Obra Pública: ${contractNum}\n\n` +
+          `• **Proyecto:** ${projName}\n` +
+          `• **Contratista:** ${contractorName}\n` +
+          `• **Fuente de Financiamiento:** **${fundingSource}**.\n` +
+          `• **Presupuesto Asignado:** **$${projBudget.toLocaleString()} MXN**.\n` +
+          `• **Curva S de Avance Físico:** Real **${physicalProgress}.0%** vs Programado **${scheduledProgress}.0%** (Desviación: -4.0%).\n` +
+          `• **Avance Financiero:** Liquidadas estimaciones #1 a #3.\n` +
+          `• **Amortización de Anticipo (30%):** $${advanceAmortized.toLocaleString()} MXN amortizados.\n` +
+          `• **Retención 5 al Millar (0.5% Supervisión):** $${millarRetention.toLocaleString()} MXN retenidos en Tesorería.\n` +
+          `• **Georreferenciación:** Trazo vectorial y frentes de obra verificados en campo.`,
         toolCall: {
           name: 'query_public_work_contract',
-          args: { contractNumber: 'COP-PUE-2026-003', includeSCurve: true },
+          args: { contractNumber: contractNum, includeSCurve: true },
           executionTimeMs: 14,
           status: 'SUCCESS',
         },
         citations: [
-          { source: 'Ley de Obras Públicas y Servicios Relacionados del Estado de Puebla', reference: 'Art. 54 (Estimaciones y Amortizaciones)' },
+          { source: 'Ley de Obras Públicas y Servicios Relacionados del Estado', reference: 'Art. 54 y 68 (Estimaciones y Amortizaciones)' },
           { source: 'Lineamientos de Operación del FAISMUN 2026 (DOF)', reference: 'Capítulo IV: Verificación Física en Sitio' },
         ],
         actions: [
-          { label: 'Ver Gráfica de Curva S', actionType: 'NAVIGATE_PROJECTS' },
-          { label: 'Enfocar Tramo en Mapa GIS', actionType: 'FOCUS_MAP', payload: [-98.215, 19.048] },
+          { label: 'Ver Módulo de Obras y Curva S', actionType: 'NAVIGATE_PROJECTS' },
+          { label: 'Localizar Frente de Obra', actionType: 'FOCUS_MAP', payload: [-98.215, 19.048] },
         ],
         timestamp: nowTime,
       };
     }
 
-    if (agentToUse === 'URBAN_AGENT') {
-      return {
-        id: `agent-${Date.now()}`,
-        sender: 'AGENT',
-        agentName: 'UrbanAgent',
-        agentRole: 'Especialista en Catastro, Normativa PDU & Licencias Urbanas',
-        content:
-          'Para el predio en zona **H3-UNIFAMILIAR** del Programa Municipal de Desarrollo Urbano:\n\n• **Lote Base:** 350.0 m².\n• **COS Calculado:** Con desplante de 220.0 m², el COS es **0.63** (máximo reglamentario: 0.70) 👉 **COMPATIBLE**.\n• **CUS Calculado:** Con 610.0 m² de construcción total en 3 niveles, el CUS es **1.74** (máximo: 2.10) 👉 **COMPATIBLE**.\n• **Cédula Oficial:** La solicitud se encuentra avalada con dictamen pericial del **DRO-PUE-2018-0441** y amparada bajo la licencia **LIC-OBR-2026-00412** con sello digital SHA-256.',
-        toolCall: {
-          name: 'calculate_zoning_compliance',
-          args: { zoneCode: 'H3-UNIFAMILIAR', lotAreaM2: 350.0, footprintM2: 220.0, totalConstructionM2: 610.0 },
-          executionTimeMs: 9,
-          status: 'SUCCESS',
-        },
-        citations: [
-          { source: 'Programa Municipal de Desarrollo Urbano de Puebla (PDU)', reference: 'Capítulo Zonificación Secundaria y Tabla de Coeficientes de Suelo' },
-          { source: 'Reglamento de Construcciones para el Municipio de Puebla', reference: 'Art. 42 y 83 (Obligaciones del DRO)' },
-        ],
-        actions: [
-          { label: 'Ver Módulo de Licencias Urbanas', actionType: 'NAVIGATE_PERMITS' },
-          { label: 'Centrar Predio en Catastro', actionType: 'FOCUS_MAP', payload: [-98.2063, 19.0414] },
-        ],
-        timestamp: nowTime,
-      };
-    }
+    // 5. INCIDENCIAS URBANAS 072 & MESA DE CONTROL
+    if (q.includes('bache') || q.includes('fuga') || q.includes('sla') || q.includes('incidencia') || q.includes('072') || q.includes('mttr') || q.includes('reporte')) {
+      const totalInc = incidents.length;
+      const openInc = incidents.filter(i => i.status === 'Recibida' || i.status === 'Validada' || i.status === 'Asignada').length;
+      const inProc = incidents.filter(i => i.status === 'En Proceso').length;
 
-    if (agentToUse === 'INCIDENT_AGENT') {
       return {
         id: `agent-${Date.now()}`,
         sender: 'AGENT',
         agentName: 'IncidentAgent',
         agentRole: 'Especialista en Mesa de Control 072, Despacho & Tiempos SLA',
-        content:
-          'En el último corte mensual se han registrado **418 reportes** ciudadanos:\n\n• **Tasa de Cumplimiento de SLA:** **87.8%** dentro del tiempo de respuesta contractual.\n• **MTTR Global:** **14.2 horas** de tiempo medio de resolución (mejora de 4.4h vs mes anterior).\n• **Colonias con Mayor Concentración:** **Amalucan / Oriente** (85 reportes, MTTR 22.4h) y **San Jerónimo Caleras** (63 reportes, MTTR 28.6h).\n• **Brigada Destacada:** Cuadrilla 02 (Alumbrado) con 97.8% de eficiencia y tiempo promedio de 6.2 horas.',
+        content: `### 🚨 Mesa de Control y Despacho Ciudadano 072\n\n` +
+          `• **Volumen Activo:** **${totalInc} incidencias registradas** (${openInc} Abiertas, ${inProc} En Proceso de atención).\n` +
+          `• **Cumplimiento Global de SLA:** **87.8%** dentro del tiempo límite normativo.\n` +
+          `• **Tiempo Medio de Resolución (MTTR):** **14.2 horas**.\n` +
+          `• **Matriz de SLA por Tipología:**\n` +
+          `  - **Bache Crítico en Vía Primaria:** SLA 24 horas (Prioridad ALTA).\n` +
+          `  - **Fuga de Agua Potable / Drenaje:** SLA 12 horas (Prioridad CRÍTICA).\n` +
+          `  - **Falla de Circuito de Alumbrado:** SLA 48 horas (Prioridad MEDIA).\n` +
+          `• **Colonias con Mayor Concentración:** Amalucan, San Jerónimo Caleras y Centro Histórico.\n` +
+          `• **Cuadrillas en Campo:** Despacho con geolocalización celular en tiempo real vía PWA.`,
         toolCall: {
-          name: 'query_incidents_summary',
-          args: { timeframe: '30D', groupBy: 'neighborhood' },
+          name: 'query_incidents_dispatch_kpi',
+          args: { timeframe: '30D', groupBy: 'type_and_neighborhood' },
           executionTimeMs: 11,
           status: 'SUCCESS',
         },
         citations: [
           { source: 'Matriz Municipal de Compromisos de Servicio SLA 072', reference: 'Acuerdo de Cabildo 14-01-2025' },
-          { source: 'Protocolo de Despacho de Servicios Públicos y Obras', reference: 'Manual de Cuadrillas Municipales 2026' },
+          { source: 'Protocolo de Despacho de Servicios Públicos y Obras', reference: 'Manual Operativo de Cuadrillas 2026' },
         ],
         actions: [
-          { label: 'Ver Mapa de Calor en Analytics', actionType: 'NAVIGATE_ANALYTICS' },
           { label: 'Ir a Mesa de Control Kanban', actionType: 'NAVIGATE_INCIDENTS' },
+          { label: 'Ver Mapa de Calor en Analytics', actionType: 'NAVIGATE_ANALYTICS' },
         ],
         timestamp: nowTime,
       };
     }
 
-    if (agentToUse === 'INFRA_AGENT') {
+    // 6. INFRAESTRUCTURA URBANA Y REDES MUNICIPALES
+    if (q.includes('agua') || q.includes('luminaria') || q.includes('poste') || q.includes('tuberia') || q.includes('tubería') || q.includes('infraestructura') || q.includes('activo')) {
       return {
         id: `agent-${Date.now()}`,
         sender: 'AGENT',
         agentName: 'InfraAgent',
         agentRole: 'Especialista en Redes Municipales & Ciclo de Vida de Activos',
-        content:
-          'La base de datos de infraestructura registra **1,420 activos georreferenciados** en la zona:\n\n• **Red de Agua Potable (SOAPAP):** Tuberías de hierro fundido instaladas en 1994 en Centro Histórico con **18.0% de vida útil remanente** (sustitución prioritaria en 1.8 km lineales).\n• **Alumbrado Público:** 112 luminarias LED con **94.2% de cobertura activa** y depreciación acumulada de $142,000 MXN.\n• **Costo de Mantenimiento:** Inversión acumulada de $3,450,200.00 MXN en el ejercicio fiscal activo.',
+        content: `### ⚡ Catálogo e Inventario de Infraestructura Urbana\n\n` +
+          `TERRANOVA monitorea el ciclo de vida de **${MOCK_INFRASTRUCTURE.length} familias de activos estratégicos**:\n\n` +
+          `• **Red de Agua Potable & Alcantarillado:**\n` +
+          `  - Tuberías de hierro fundido (1994): **18.0% de vida útil remanente** (prioridad alta de sustitución en Centro Histórico).\n` +
+          `  - Válvulas reguladoras de presión y colectores pluviales con monitoreo hidrométrico.\n` +
+          `• **Alumbrado Público:**\n` +
+          `  - Circuitos LED de alta eficiencia con telemetría de consumo eléctrico y fotoceldas inteligentes.\n` +
+          `• **Mantenimiento y Presupuesto:**\n` +
+          `  - Costo acumulado de mantenimiento correctivo y preventivo: **$3,450,200.00 MXN** en el ejercicio fiscal activo.\n` +
+          `• **Criterio de Depreciación:** Método lineal contable conforme a la Ley General de Contabilidad Gubernamental.`,
         toolCall: {
           name: 'query_infrastructure_lifecycle',
-          args: { networkType: 'AGUA_POTABLE', calculateDepreciation: true },
+          args: { networkType: 'ALL', calculateDepreciation: true },
           executionTimeMs: 13,
           status: 'SUCCESS',
         },
         citations: [
           { source: 'Norma Oficial Mexicana NOM-001-CONAGUA-2011', reference: 'Sistemas de Agua Potable y Alcantarillado Hermético' },
-          { source: 'Catálogo de Bienes Municipales de Dominio Público', reference: 'Capítulo 5000 (Activos de Infraestructura)' },
+          { source: 'Ley General de Contabilidad Gubernamental', reference: 'Reglas Específicas del Registro de Bienes Muebles e Inmuebles' },
         ],
         actions: [
+          { label: 'Ver Inventario de Infraestructura', actionType: 'NAVIGATE_INFRA' },
           { label: 'Ver Capas de Tuberías en GIS', actionType: 'FOCUS_MAP', payload: [-98.2063, 19.0414] },
-          { label: 'Inspeccionar Activos de Red', actionType: 'NAVIGATE_INFRA' },
         ],
         timestamp: nowTime,
       };
     }
 
-    // Default: GeoAgent
+    // 7. PERMISOS, LICENCIAS Y COMPATIBILIDAD URBANA (COS / CUS / PDU)
+    if (q.includes('licencia') || q.includes('permiso') || q.includes('cos') || q.includes('cus') || q.includes('pdu') || q.includes('dro') || q.includes('zonificacion') || q.includes('zonificación')) {
+      const samplePermit = MOCK_PERMITS[0];
+      const permitFolio = samplePermit?.folio || 'LIC-OBR-2026-00412';
+      const dro = samplePermit?.droName || 'Ing. Salvador Morales (DRO-PUE-2018-0441)';
+      const zoning = samplePermit?.pduZoneClassification || 'H3-UNIFAMILIAR';
+      const cosVal = 0.63;
+      const maxCosVal = 0.70;
+      const cusVal = 1.74;
+      const maxCusVal = 2.10;
+
+      return {
+        id: `agent-${Date.now()}`,
+        sender: 'AGENT',
+        agentName: 'UrbanAgent',
+        agentRole: 'Especialista en Catastro, Normativa PDU & Licencias Urbanas',
+        content: `### 📜 Dictamen Urbano y Compatibilidad Normativa\n\n` +
+          `• **Expediente de Licencia:** \`${permitFolio}\` (Estatus: **${samplePermit?.status || 'AUTORIZADO'}**).\n` +
+          `• **Director Responsable de Obra:** ${dro}\n` +
+          `• **Zonificación Asignada:** **${zoning}** según el Programa Municipal de Desarrollo Urbano.\n` +
+          `• **Evaluación de Coeficientes de Suelo:**\n` +
+          `  - **COS (Ocupación):** Proyecto: **${cosVal}** vs Límite PDU: **${maxCosVal}** 👉 **CUMPLE**.\n` +
+          `  - **CUS (Utilización):** Proyecto: **${cusVal}** vs Límite PDU: **${maxCusVal}** 👉 **CUMPLE**.\n` +
+          `• **Vigencia Normativa:** 24 meses naturales para obra mayor (renovables conforme a bitácora de obra).\n` +
+          `• **Seguridad Criptográfica:** Expediente sellado con QR verificador y Hash SHA-256 inmutable.`,
+        toolCall: {
+          name: 'verify_construction_license',
+          args: { licenseNumber: permitFolio, checkZoning: true },
+          executionTimeMs: 9,
+          status: 'SUCCESS',
+        },
+        citations: [
+          { source: 'Programa Municipal de Desarrollo Urbano de Puebla (PDU)', reference: 'Capítulo Zonificación Secundaria y Tabla de Coeficientes' },
+          { source: 'Reglamento de Construcciones Municipal', reference: 'Art. 42 y 83 (Derechos y Obligaciones del DRO)' },
+        ],
+        actions: [
+          { label: 'Ver Expedientes de Licencias', actionType: 'NAVIGATE_PERMITS' },
+          { label: 'Centrar en Mapa Urbano', actionType: 'FOCUS_MAP', payload: [-98.2063, 19.0414] },
+        ],
+        timestamp: nowTime,
+      };
+    }
+
+    // 8. GEMELO DIGITAL 3D & SIMULACIONES
+    if (q.includes('gemelo digital') || q.includes('3d') || q.includes('solar') || q.includes('sombra') || q.includes('lluvia') || q.includes('pluvial') || q.includes('escorrentia') || q.includes('escorrentía')) {
+      return {
+        id: `agent-${Date.now()}`,
+        sender: 'AGENT',
+        agentName: 'GeoAgent',
+        agentRole: 'Especialista en Gemelo Digital 3D & Modelado Físico Territorial',
+        content: `### 🏙️ Gemelo Digital 3D de TERRANOVA (LoD1 & Física Ambiental)\n\n` +
+          `• **Proyección Tridimensional:** Extrusión volumétrica de poliedros urbanos a partir de cotas catastrales y altura de entrepiso.\n` +
+          `• **Simulación Solar Astronómica:**\n` +
+          `  - Cálculo en tiempo real de Altitud y Azimut solar según coordenadas geográficas y fecha/hora.\n` +
+          `  - Proyección de sombras cónicas proporcionales a la altura de cada inmueble.\n` +
+          `• **Simulación Pluvial e Hidrometeorológica:**\n` +
+          `  - Estimación de volumen de escorrentía acumulada (m³/hora) en función de intensidad pluviométrica.\n` +
+          `  - Detección de cuellos de botella en colectores y puntos con riesgo de anegamiento.`,
+        toolCall: {
+          name: 'simulate_solar_runoff_twin',
+          args: { solarHour: 13.5, rainIntensityMmH: 45 },
+          executionTimeMs: 15,
+          status: 'SUCCESS',
+        },
+        citations: [
+          { source: 'Astronomical Algorithms (Jean Meeus)', reference: 'Solar Coordinates and Sun Position Calculation' },
+          { source: 'Manual de Diseño de Obras Civiles (CFE / CONAGUA)', reference: 'Capítulo Hidrología y Drenaje Pluvial Urbano' },
+        ],
+        actions: [
+          { label: 'Abrir Gemelo Digital 3D', actionType: 'NAVIGATE_DIGITAL_TWIN' },
+        ],
+        timestamp: nowTime,
+      };
+    }
+
+    // 9. CIBERSEGURIDAD, RLS & AUDITORÍA OWASP
+    if (q.includes('seguridad') || q.includes('owasp') || q.includes('rls') || q.includes('multi-tenant') || q.includes('auditoria') || q.includes('auditoría') || q.includes('seguro')) {
+      return {
+        id: `agent-${Date.now()}`,
+        sender: 'AGENT',
+        agentName: 'SecurityAgent',
+        agentRole: 'Especialista en Ciberseguridad, RLS Multi-Tenant & Hardening OWASP',
+        content: `### 🛡️ Arquitectura de Ciberseguridad y Blindaje de TERRANOVA\n\n` +
+          `• **Aislamiento Multi-Tenant Estricto:**\n` +
+          `  - **PostgreSQL Row Level Security (RLS)** activo en las 12 tablas del esquema de base de datos.\n` +
+          `  - Imposibilidad matemática de fuga de datos entre municipios o desarrolladoras privadas (Anti-IDOR).\n` +
+          `• **Inmutabilidad WORM:**\n` +
+          `  - Tabla \`audit_logs\` protegida con triggers que bloquean de forma absoluta cualquier \`UPDATE\` o \`DELETE\`.\n` +
+          `  - Cada registro de auditoría cuenta con firma criptográfica HMAC-SHA256 encadenada.\n` +
+          `• **Criptografía Robusta:**\n` +
+          `  - Derivación de contraseñas con **BCrypt (factor de costo 12)**.\n` +
+          `  - Autenticación multifactor **TOTP RFC 6238** con ventana temporal estricta.\n` +
+          `• **Protección contra Inyecciones SQL:**\n` +
+          `  - Consultas exclusivamente parametrizadas con Prisma ORM / Kysely tipado, con bloqueo proactivo de cadenas dinámicas.`,
+        toolCall: {
+          name: 'audit_system_security_matrix',
+          args: { verifyRLS: true, checkAuditHMAC: true },
+          executionTimeMs: 8,
+          status: 'SUCCESS',
+        },
+        citations: [
+          { source: 'OWASP Top 10:2021', reference: 'A01: Broken Access Control & A03: Injection Mitigation' },
+          { source: 'NIST SP 800-63B', reference: 'Digital Identity Guidelines: Authentication and Lifecycle Management' },
+        ],
+        actions: [
+          { label: 'Ver Panel de Auditoría y Seguridad', actionType: 'NAVIGATE_ADMIN' },
+        ],
+        timestamp: nowTime,
+      };
+    }
+
+    // 10. ORGANIZACIONES AUTORIZADAS Y COBERTURA NACIONAL
+    if (q.includes('organizacion') || q.includes('organización') || q.includes('autorizadas') || q.includes('estados') || q.includes('gobiernos')) {
+      return {
+        id: `agent-${Date.now()}`,
+        sender: 'AGENT',
+        agentName: 'GeoAgent',
+        agentRole: 'Especialista en Gobernanza Territorial & Organizaciones Autorizadas',
+        content: `### 🇲🇽 Red de Organizaciones Autorizadas en TERRANOVA\n\n` +
+          `Actualmente la plataforma cuenta con **${MOCK_ORGANIZATIONS.length} organizaciones dadas de alta y autorizadas**:\n\n` +
+          `• **32 Gobiernos Estatales:** Cobertura del 100% de las Entidades Federativas de México (Aguascalientes, Baja California, CDMX, Jalisco, Nuevo León, Puebla, Querétaro, Sonora, Yucatán, etc.).\n` +
+          `• **Gobiernos Municipales Autorizados:** H. Ayuntamiento de Puebla, Municipio de Querétaro, Monterrey, Guadalajara, Mérida, Alcaldía Cuauhtémoc.\n` +
+          `• **Desarrolladoras y Constructoras:** Grupo Desarrollador Norte, Constructora Metropolitana Jalisco.\n` +
+          `• **Aislamiento Multi-Tenant:** Cada organización opera en su propio espacio lógico aislado mediante \`organization_id\` y RLS.`,
+        toolCall: {
+          name: 'query_authorized_organizations',
+          args: { totalOrgs: MOCK_ORGANIZATIONS.length },
+          executionTimeMs: 7,
+          status: 'SUCCESS',
+        },
+        citations: [
+          { source: 'Marco de Gobernanza Multi-Tenant TERRANOVA', reference: 'Directorio de Tenants Autorizados 2026' },
+        ],
+        actions: [
+          { label: 'Ir a Administración y Gobernanza', actionType: 'NAVIGATE_ADMIN' },
+          { label: 'Ver República Mexicana en GIS', actionType: 'NAVIGATE_GIS' },
+        ],
+        timestamp: nowTime,
+      };
+    }
+
+    // 11. RESPUESTA INTELIGENTE GLOBAL POR DEFECTO
     return {
       id: `agent-${Date.now()}`,
       sender: 'AGENT',
-      agentName: 'GeoAgent',
-      agentRole: 'Especialista en Cartografía Oficial INEGI & Proyecciones EPSG:6362',
-      content:
-        'La cartografía del municipio de Puebla opera bajo el **Marco Geoestadístico Nacional (MGN) del INEGI Edición 2026**.\n\n• **Proyección Oficial:** **EPSG:6362 (ITRF2008 / LCC)** con transformación conforme para Centro y Sur de México, complementada con **EPSG:32614 (UTM Zona 14N)**.\n• **Validación Topológica:** Los 11 cuadrantes parcelarios cumplen estrictamente con la regla geodésica PostGIS `ST_IsValid` sin traslapes ni polígonos degenerados.',
+      agentName: 'TERRANOVA AI Orchestrator',
+      agentRole: 'Enrutador Autónomo de Inteligencia Territorial',
+      content: `### 🌐 Panorama General de TERRANOVA OS\n\n` +
+        `He procesado tu consulta: *"${query}"*. TERRANOVA cuenta con información viva en los siguientes módulos territoriales:\n\n` +
+        `1. **Marco Geoestadístico Nacional (MGN):** Cobertura completa de los **32 Estados de México**, 108 municipios y 324 localidades con geometría oficial INEGI EPSG:6362.\n` +
+        `2. **Catastro y Valuación:** Padrón de predios, cálculo predial con pronto pago (15%) y expedición de cédulas con sello SHA-256.\n` +
+        `3. **Obras Públicas y Curva S:** Contratos FAISMUN/FORTAMUN, amortización de anticipos (30%) y avance físico vs programado.\n` +
+        `4. **Mesa de Despacho 072:** Reportes de baches y fugas con semáforo SLA y cálculo automático de MTTR.\n` +
+        `5. **Infraestructura Urbana:** Ciclo de vida y depreciación de redes de agua potable y alumbrado.\n` +
+        `6. **Gemelo Digital 3D:** Simulación solar diurna/cenital y proyección de escorrentía pluvial.\n\n` +
+        `*Puedes preguntarme sobre cualquier estado (ej. "Háblame de Jalisco o Sonora"), consultar contratos de obra, o pedir el avalúo de un predio.*`,
       toolCall: {
-        name: 'validate_geodesic_polygon',
-        args: { srid: 6362, municipalityCode: '21114' },
-        executionTimeMs: 8,
+        name: 'comprehensive_territorial_scan',
+        args: { userQuery: query },
+        executionTimeMs: 9,
         status: 'SUCCESS',
       },
       citations: [
-        { source: 'Instituto Nacional de Estadística y Geografía (INEGI)', reference: 'Marco Geoestadístico Nacional (MGN) 2026' },
-        { source: 'Centro Nacional de Información Catastral', reference: 'Parámetros Geodésicos ITRF2008 Época 2010.0' },
+        { source: 'Marco Geoestadístico Nacional (MGN) INEGI 2026', reference: 'Catálogo de Cobertura República Mexicana' },
+        { source: 'Arquitectura TERRANOVA Core 1.0', reference: 'Modelo Unificado de Gestión Municipal y Estatal' },
       ],
       actions: [
-        { label: 'Explorar en Visor MapLibre', actionType: 'FOCUS_MAP', payload: [-98.2063, 19.0414] },
+        { label: 'Explorar Mapa de la República', actionType: 'NAVIGATE_GIS' },
+        { label: 'Ver Módulo de Catastro', actionType: 'NAVIGATE_PROPERTIES' },
+        { label: 'Consultar Obras Públicas', actionType: 'NAVIGATE_PROJECTS' },
       ],
       timestamp: nowTime,
     };
@@ -298,6 +598,14 @@ export const AiAssistantView: React.FC<AiAssistantViewProps> = ({
       onNavigateModule('incidents');
     } else if (action.actionType === 'NAVIGATE_INFRA' && onNavigateModule) {
       onNavigateModule('infrastructure');
+    } else if (action.actionType === 'NAVIGATE_GIS' && onNavigateModule) {
+      onNavigateModule('gis');
+    } else if (action.actionType === 'NAVIGATE_PROPERTIES' && onNavigateModule) {
+      onNavigateModule('properties');
+    } else if (action.actionType === 'NAVIGATE_DIGITAL_TWIN' && onNavigateModule) {
+      onNavigateModule('digital-twin');
+    } else if (action.actionType === 'NAVIGATE_ADMIN' && onNavigateModule) {
+      onNavigateModule('admin');
     }
   };
 

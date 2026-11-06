@@ -31,7 +31,7 @@ export const AppShell: React.FC = () => {
   };
 
   return (
-    <div className={`h-screen w-screen flex flex-col overflow-hidden bg-terranova-900 text-terranova-100 ${store.isDarkMode ? 'dark' : ''}`}>
+    <div className={`h-screen w-screen flex flex-col overflow-hidden ${store.isDarkMode ? 'bg-[#07131B] text-terranova-100 dark' : 'bg-slate-100 text-slate-800'}`}>
       {/* 1. Top Header */}
       <Header
         currentOrg={store.currentOrg}
@@ -55,6 +55,7 @@ export const AppShell: React.FC = () => {
           collapsed={sidebarCollapsed}
           onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
           incidentCount={store.incidents.length}
+          isDarkMode={store.isDarkMode}
         />
 
         {/* Viewport Router */}
@@ -83,6 +84,7 @@ export const AppShell: React.FC = () => {
               onSelectProperty={(p) => store.setSelectedEntity({ type: 'property', data: p })}
               onSelectIncident={(i) => store.setSelectedEntity({ type: 'incident', data: i })}
               crs={store.currentOrg.crs}
+              isDarkMode={store.isDarkMode}
             />
           )}
 

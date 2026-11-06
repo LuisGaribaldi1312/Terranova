@@ -18,7 +18,7 @@ import {
 type MapLibreInstance = maplibregl.Map;
 type GeoJSONSource = maplibregl.GeoJSONSource;
 
-export type BaseMapStyle = 'dark' | 'sat' | 'osm';
+export type BaseMapStyle = 'dark' | 'voyager' | 'topo' | 'osm' | 'sat';
 export type GisToolMode = 'pan' | 'measure_distance' | 'measure_area' | 'draw_polygon';
 
 interface MapLibreMapProps {
@@ -60,6 +60,7 @@ export const MapLibreMap: React.FC<MapLibreMapProps> = ({
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<MapLibreInstance | null>(null);
+  const markersRef = useRef<maplibregl.Marker[]>([]);
   const [measurementPoints, setMeasurementPoints] = useState<[number, number][]>([]);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [mapError, setMapError] = useState<string | null>(null);
@@ -67,6 +68,38 @@ export const MapLibreMap: React.FC<MapLibreMapProps> = ({
   // Estilos de MapLibre: Raster de alta disponibilidad para garantizar visualización inmediata
   const getStyleUrl = (style: BaseMapStyle) => {
     switch (style) {
+      case 'voyager':
+        // CartoDB Voyager: La cartografía más nítida, detallada y legible para modo diurno
+        return {
+          version: 8,
+          sources: {
+            'carto-voyager': {
+              type: 'raster',
+              tiles: [
+                'https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
+                'https://b.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
+                'https://c.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
+              ],
+              tileSize: 256,
+              attribution: '&copy; CartoDB &copy; OpenStreetMap contributors',
+            },
+          },
+          layers: [{ id: 'carto-voyager-layer', type: 'raster', source: 'carto-voyager' }],
+        };
+      case 'topo':
+        // Esri World Street Map: Red de carreteras federales, estatales y toponimia completa
+        return {
+          version: 8,
+          sources: {
+            'esri-topo': {
+              type: 'raster',
+              tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}'],
+              tileSize: 256,
+              attribution: 'Esri, HERE, Garmin, USGS, NGA, EPA',
+            },
+          },
+          layers: [{ id: 'esri-topo-layer', type: 'raster', source: 'esri-topo' }],
+        };
       case 'sat':
         return {
           version: 8,
@@ -95,7 +128,7 @@ export const MapLibreMap: React.FC<MapLibreMapProps> = ({
         };
       case 'dark':
       default:
-        // CartoDB Dark Matter Raster Tiles (Máxima resiliencia y carga sin bloqueos CORS)
+        // CartoDB Dark Matter Raster Tiles (Máxima resiliencia y contraste en modo noche)
         return {
           version: 8,
           sources: {
@@ -136,16 +169,35 @@ export const MapLibreMap: React.FC<MapLibreMapProps> = ({
       map.on('load', () => {
         mapInstanceRef.current = map;
         setMapLoaded(true);
+        map.resize();
         setupTerritorialLayers(map);
         setupUserLayers(map);
+        setupStateMarkers(map);
+
+        setTimeout(() => {
+          if (mapInstanceRef.current) {
+            mapInstanceRef.current.resize();
+          }
+        }, 200);
       });
 
       map.on('error', (err) => {
         console.warn('MapLibre GL Notice:', err);
       });
 
+      // ResizeObserver para garantizar que el lienzo WebGL se ajuste siempre al 100%
+      const ro = new ResizeObserver(() => {
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.resize();
+        }
+      });
+      ro.observe(mapContainerRef.current);
+
       // Cleanup
       return () => {
+        ro.disconnect();
+        markersRef.current.forEach((m) => m.remove());
+        markersRef.current = [];
         map.remove();
         mapInstanceRef.current = null;
       };
@@ -155,6 +207,34 @@ export const MapLibreMap: React.FC<MapLibreMapProps> = ({
     }
   }, []);
 
+  const setupStateMarkers = (map: MapLibreInstance) => {
+    // Limpiar marcadores previos
+    markersRef.current.forEach((m) => m.remove());
+    markersRef.current = [];
+
+    // Crear etiquetas flotantes elegantes para los 32 estados
+    MEXICAN_STATES.forEach((st) => {
+      const el = document.createElement('div');
+      el.className = 'cursor-pointer group select-none transition-transform hover:scale-110';
+      el.innerHTML = `
+        <div class="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold tracking-tight bg-slate-950/85 text-emerald-400 border border-emerald-500/50 shadow-md backdrop-blur-sm group-hover:bg-emerald-500 group-hover:text-black transition-all">
+          ${st.shortName}
+        </div>
+      `;
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        onSelectState?.(st);
+        map.flyTo({ center: st.center, zoom: st.zoom, speed: 1.3 });
+      });
+
+      const marker = new maplibregl.Marker({ element: el })
+        .setLngLat(st.center)
+        .addTo(map);
+
+      markersRef.current.push(marker);
+    });
+  };
+
   // 2. Cambio dinámico de Mapa Base
   useEffect(() => {
     const map = mapInstanceRef.current;
@@ -163,6 +243,7 @@ export const MapLibreMap: React.FC<MapLibreMapProps> = ({
     map.once('style.load', () => {
       setupTerritorialLayers(map);
       setupUserLayers(map);
+      setupStateMarkers(map);
     });
   }, [baseMap]);
 
@@ -222,7 +303,7 @@ export const MapLibreMap: React.FC<MapLibreMapProps> = ({
         data: getMexicanStatesGeoJSON() as any,
       });
 
-      // Relleno suave con transparencia para diferenciar estados
+      // Relleno sutil que no obstruye la visibilidad de calles, costas ni toponimia del mapa base
       map.addLayer({
         id: 'states-fill',
         type: 'fill',
@@ -239,7 +320,7 @@ export const MapLibreMap: React.FC<MapLibreMapProps> = ({
             '31', '#10B981', // Yucatán en esmeralda
             /* default */ '#0EA5E9',
           ],
-          'fill-opacity': 0.18,
+          'fill-opacity': 0.06,
         },
       });
 
@@ -249,9 +330,9 @@ export const MapLibreMap: React.FC<MapLibreMapProps> = ({
         type: 'line',
         source: 'mgn-states-source',
         paint: {
-          'line-color': '#38BDF8',
-          'line-width': 2,
-          'line-opacity': 0.85,
+          'line-color': '#0284C7',
+          'line-width': 2.5,
+          'line-opacity': 0.9,
         },
       });
 
@@ -281,8 +362,8 @@ export const MapLibreMap: React.FC<MapLibreMapProps> = ({
         type: 'fill',
         source: 'mgn-municipalities-source',
         paint: {
-          'fill-color': '#17A987',
-          'fill-opacity': 0.25,
+          'fill-color': '#10B981',
+          'fill-opacity': 0.10,
         },
       });
 

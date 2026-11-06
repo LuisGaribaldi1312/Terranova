@@ -2,45 +2,405 @@ import { Organization, PropertyItem, IncidentItem, ProjectItem, LayerItem, KPICa
 
 export const MOCK_ORGANIZATIONS: Organization[] = [
   {
-    id: 'org-puebla-001',
-    name: 'H. Ayuntamiento de Puebla',
-    code: 'MUN-PUE-001',
-    type: 'MUNICIPALITY',
-    state: 'Puebla (21)',
-    municipality: 'Puebla (114)',
-    badge: 'Gobierno Municipal',
-    crs: 'EPSG:32614 (UTM Zona 14N)',
+    "id": "org-state-01",
+    "name": "Gobierno del Estado de Aguascalientes",
+    "code": "GOB-EST-01",
+    "type": "STATE_GOV",
+    "state": "Aguascalientes (01)",
+    "municipality": "Aguascalientes",
+    "badge": "Gobierno Estatal Autorizado",
+    "crs": "EPSG:6362 (ITRF2008 / LCC)"
   },
   {
-    id: 'org-qro-002',
-    name: 'Municipio de Querétaro',
-    code: 'MUN-QRO-014',
-    type: 'MUNICIPALITY',
-    state: 'Querétaro (22)',
-    municipality: 'Querétaro (014)',
-    badge: 'Gobierno Municipal',
-    crs: 'EPSG:32614 (UTM Zona 14N)',
+    "id": "org-state-02",
+    "name": "Gobierno del Estado de Baja California",
+    "code": "GOB-EST-02",
+    "type": "STATE_GOV",
+    "state": "Baja California (02)",
+    "municipality": "Mexicali",
+    "badge": "Gobierno Estatal Autorizado",
+    "crs": "EPSG:6362 (ITRF2008 / LCC)"
   },
   {
-    id: 'org-mty-dev-003',
-    name: 'Grupo Desarrollador Norte',
-    code: 'DEV-NL-088',
-    type: 'DEVELOPER',
-    state: 'Nuevo León (19)',
-    municipality: 'San Pedro Garza García (019)',
-    badge: 'Desarrolladora Inmobiliaria',
-    crs: 'EPSG:32614 (UTM Zona 14N)',
+    "id": "org-state-03",
+    "name": "Gobierno del Estado de Baja California Sur",
+    "code": "GOB-EST-03",
+    "type": "STATE_GOV",
+    "state": "Baja California Sur (03)",
+    "municipality": "La Paz",
+    "badge": "Gobierno Estatal Autorizado",
+    "crs": "EPSG:6362 (ITRF2008 / LCC)"
   },
   {
-    id: 'org-gdl-infra-004',
-    name: 'Constructora Metropolitana Jal.',
-    code: 'CON-JAL-039',
-    type: 'CONSTRUCTION',
-    state: 'Jalisco (14)',
-    municipality: 'Guadalajara (039)',
-    badge: 'Constructora e Infraestructura',
-    crs: 'EPSG:32613 (UTM Zona 13N)',
+    "id": "org-state-04",
+    "name": "Gobierno del Estado de Campeche",
+    "code": "GOB-EST-04",
+    "type": "STATE_GOV",
+    "state": "Campeche (04)",
+    "municipality": "San Francisco de Campeche",
+    "badge": "Gobierno Estatal Autorizado",
+    "crs": "EPSG:6362 (ITRF2008 / LCC)"
   },
+  {
+    "id": "org-state-05",
+    "name": "Gobierno del Estado de Coahuila de Zaragoza",
+    "code": "GOB-EST-05",
+    "type": "STATE_GOV",
+    "state": "Coahuila de Zaragoza (05)",
+    "municipality": "Saltillo",
+    "badge": "Gobierno Estatal Autorizado",
+    "crs": "EPSG:6362 (ITRF2008 / LCC)"
+  },
+  {
+    "id": "org-state-06",
+    "name": "Gobierno del Estado de Colima",
+    "code": "GOB-EST-06",
+    "type": "STATE_GOV",
+    "state": "Colima (06)",
+    "municipality": "Colima",
+    "badge": "Gobierno Estatal Autorizado",
+    "crs": "EPSG:6362 (ITRF2008 / LCC)"
+  },
+  {
+    "id": "org-state-07",
+    "name": "Gobierno del Estado de Chiapas",
+    "code": "GOB-EST-07",
+    "type": "STATE_GOV",
+    "state": "Chiapas (07)",
+    "municipality": "Tuxtla Gutiérrez",
+    "badge": "Gobierno Estatal Autorizado",
+    "crs": "EPSG:6362 (ITRF2008 / LCC)"
+  },
+  {
+    "id": "org-state-08",
+    "name": "Gobierno del Estado de Chihuahua",
+    "code": "GOB-EST-08",
+    "type": "STATE_GOV",
+    "state": "Chihuahua (08)",
+    "municipality": "Chihuahua",
+    "badge": "Gobierno Estatal Autorizado",
+    "crs": "EPSG:6362 (ITRF2008 / LCC)"
+  },
+  {
+    "id": "org-state-09",
+    "name": "Gobierno de la Ciudad de México",
+    "code": "GOB-CDMX-09",
+    "type": "STATE_GOV",
+    "state": "Ciudad de México (09)",
+    "municipality": "Alcaldía Cuauhtémoc",
+    "badge": "Entidad Federativa Autorizada",
+    "crs": "EPSG:6362 (ITRF2008 / LCC)"
+  },
+  {
+    "id": "org-state-10",
+    "name": "Gobierno del Estado de Durango",
+    "code": "GOB-EST-10",
+    "type": "STATE_GOV",
+    "state": "Durango (10)",
+    "municipality": "Victoria de Durango",
+    "badge": "Gobierno Estatal Autorizado",
+    "crs": "EPSG:6362 (ITRF2008 / LCC)"
+  },
+  {
+    "id": "org-state-11",
+    "name": "Gobierno del Estado de Guanajuato",
+    "code": "GOB-EST-11",
+    "type": "STATE_GOV",
+    "state": "Guanajuato (11)",
+    "municipality": "Guanajuato",
+    "badge": "Gobierno Estatal Autorizado",
+    "crs": "EPSG:6362 (ITRF2008 / LCC)"
+  },
+  {
+    "id": "org-state-12",
+    "name": "Gobierno del Estado de Guerrero",
+    "code": "GOB-EST-12",
+    "type": "STATE_GOV",
+    "state": "Guerrero (12)",
+    "municipality": "Chilpancingo de los Bravo",
+    "badge": "Gobierno Estatal Autorizado",
+    "crs": "EPSG:6362 (ITRF2008 / LCC)"
+  },
+  {
+    "id": "org-state-13",
+    "name": "Gobierno del Estado de Hidalgo",
+    "code": "GOB-EST-13",
+    "type": "STATE_GOV",
+    "state": "Hidalgo (13)",
+    "municipality": "Pachuca de Soto",
+    "badge": "Gobierno Estatal Autorizado",
+    "crs": "EPSG:6362 (ITRF2008 / LCC)"
+  },
+  {
+    "id": "org-state-14",
+    "name": "Gobierno del Estado de Jalisco",
+    "code": "GOB-EST-14",
+    "type": "STATE_GOV",
+    "state": "Jalisco (14)",
+    "municipality": "Guadalajara",
+    "badge": "Gobierno Estatal Autorizado",
+    "crs": "EPSG:6362 (ITRF2008 / LCC)"
+  },
+  {
+    "id": "org-state-15",
+    "name": "Gobierno del Estado de Estado de México",
+    "code": "GOB-EST-15",
+    "type": "STATE_GOV",
+    "state": "Estado de México (15)",
+    "municipality": "Toluca de Lerdo",
+    "badge": "Gobierno Estatal Autorizado",
+    "crs": "EPSG:6362 (ITRF2008 / LCC)"
+  },
+  {
+    "id": "org-state-16",
+    "name": "Gobierno del Estado de Michoacán de Ocampo",
+    "code": "GOB-EST-16",
+    "type": "STATE_GOV",
+    "state": "Michoacán de Ocampo (16)",
+    "municipality": "Morelia",
+    "badge": "Gobierno Estatal Autorizado",
+    "crs": "EPSG:6362 (ITRF2008 / LCC)"
+  },
+  {
+    "id": "org-state-17",
+    "name": "Gobierno del Estado de Morelos",
+    "code": "GOB-EST-17",
+    "type": "STATE_GOV",
+    "state": "Morelos (17)",
+    "municipality": "Cuernavaca",
+    "badge": "Gobierno Estatal Autorizado",
+    "crs": "EPSG:6362 (ITRF2008 / LCC)"
+  },
+  {
+    "id": "org-state-18",
+    "name": "Gobierno del Estado de Nayarit",
+    "code": "GOB-EST-18",
+    "type": "STATE_GOV",
+    "state": "Nayarit (18)",
+    "municipality": "Tepic",
+    "badge": "Gobierno Estatal Autorizado",
+    "crs": "EPSG:6362 (ITRF2008 / LCC)"
+  },
+  {
+    "id": "org-state-19",
+    "name": "Gobierno del Estado de Nuevo León",
+    "code": "GOB-EST-19",
+    "type": "STATE_GOV",
+    "state": "Nuevo León (19)",
+    "municipality": "Monterrey",
+    "badge": "Gobierno Estatal Autorizado",
+    "crs": "EPSG:6362 (ITRF2008 / LCC)"
+  },
+  {
+    "id": "org-state-20",
+    "name": "Gobierno del Estado de Oaxaca",
+    "code": "GOB-EST-20",
+    "type": "STATE_GOV",
+    "state": "Oaxaca (20)",
+    "municipality": "Oaxaca de Juárez",
+    "badge": "Gobierno Estatal Autorizado",
+    "crs": "EPSG:6362 (ITRF2008 / LCC)"
+  },
+  {
+    "id": "org-state-21",
+    "name": "Gobierno del Estado de Puebla",
+    "code": "GOB-EST-21",
+    "type": "STATE_GOV",
+    "state": "Puebla (21)",
+    "municipality": "Heroica Puebla de Zaragoza",
+    "badge": "Gobierno Estatal Autorizado",
+    "crs": "EPSG:6362 (ITRF2008 / LCC)"
+  },
+  {
+    "id": "org-state-22",
+    "name": "Gobierno del Estado de Querétaro",
+    "code": "GOB-EST-22",
+    "type": "STATE_GOV",
+    "state": "Querétaro (22)",
+    "municipality": "Santiago de Querétaro",
+    "badge": "Gobierno Estatal Autorizado",
+    "crs": "EPSG:6362 (ITRF2008 / LCC)"
+  },
+  {
+    "id": "org-state-23",
+    "name": "Gobierno del Estado de Quintana Roo",
+    "code": "GOB-EST-23",
+    "type": "STATE_GOV",
+    "state": "Quintana Roo (23)",
+    "municipality": "Chetumal",
+    "badge": "Gobierno Estatal Autorizado",
+    "crs": "EPSG:6362 (ITRF2008 / LCC)"
+  },
+  {
+    "id": "org-state-24",
+    "name": "Gobierno del Estado de San Luis Potosí",
+    "code": "GOB-EST-24",
+    "type": "STATE_GOV",
+    "state": "San Luis Potosí (24)",
+    "municipality": "San Luis Potosí",
+    "badge": "Gobierno Estatal Autorizado",
+    "crs": "EPSG:6362 (ITRF2008 / LCC)"
+  },
+  {
+    "id": "org-state-25",
+    "name": "Gobierno del Estado de Sinaloa",
+    "code": "GOB-EST-25",
+    "type": "STATE_GOV",
+    "state": "Sinaloa (25)",
+    "municipality": "Culiacán Rosales",
+    "badge": "Gobierno Estatal Autorizado",
+    "crs": "EPSG:6362 (ITRF2008 / LCC)"
+  },
+  {
+    "id": "org-state-26",
+    "name": "Gobierno del Estado de Sonora",
+    "code": "GOB-EST-26",
+    "type": "STATE_GOV",
+    "state": "Sonora (26)",
+    "municipality": "Hermosillo",
+    "badge": "Gobierno Estatal Autorizado",
+    "crs": "EPSG:6362 (ITRF2008 / LCC)"
+  },
+  {
+    "id": "org-state-27",
+    "name": "Gobierno del Estado de Tabasco",
+    "code": "GOB-EST-27",
+    "type": "STATE_GOV",
+    "state": "Tabasco (27)",
+    "municipality": "Villahermosa",
+    "badge": "Gobierno Estatal Autorizado",
+    "crs": "EPSG:6362 (ITRF2008 / LCC)"
+  },
+  {
+    "id": "org-state-28",
+    "name": "Gobierno del Estado de Tamaulipas",
+    "code": "GOB-EST-28",
+    "type": "STATE_GOV",
+    "state": "Tamaulipas (28)",
+    "municipality": "Ciudad Victoria",
+    "badge": "Gobierno Estatal Autorizado",
+    "crs": "EPSG:6362 (ITRF2008 / LCC)"
+  },
+  {
+    "id": "org-state-29",
+    "name": "Gobierno del Estado de Tlaxcala",
+    "code": "GOB-EST-29",
+    "type": "STATE_GOV",
+    "state": "Tlaxcala (29)",
+    "municipality": "Tlaxcala de Xicohténcatl",
+    "badge": "Gobierno Estatal Autorizado",
+    "crs": "EPSG:6362 (ITRF2008 / LCC)"
+  },
+  {
+    "id": "org-state-30",
+    "name": "Gobierno del Estado de Veracruz de Ignacio de la Llave",
+    "code": "GOB-EST-30",
+    "type": "STATE_GOV",
+    "state": "Veracruz de Ignacio de la Llave (30)",
+    "municipality": "Xalapa-Enríquez",
+    "badge": "Gobierno Estatal Autorizado",
+    "crs": "EPSG:6362 (ITRF2008 / LCC)"
+  },
+  {
+    "id": "org-state-31",
+    "name": "Gobierno del Estado de Yucatán",
+    "code": "GOB-EST-31",
+    "type": "STATE_GOV",
+    "state": "Yucatán (31)",
+    "municipality": "Mérida",
+    "badge": "Gobierno Estatal Autorizado",
+    "crs": "EPSG:6362 (ITRF2008 / LCC)"
+  },
+  {
+    "id": "org-state-32",
+    "name": "Gobierno del Estado de Zacatecas",
+    "code": "GOB-EST-32",
+    "type": "STATE_GOV",
+    "state": "Zacatecas (32)",
+    "municipality": "Zacatecas",
+    "badge": "Gobierno Estatal Autorizado",
+    "crs": "EPSG:6362 (ITRF2008 / LCC)"
+  },
+  {
+    "id": "org-puebla-001",
+    "name": "H. Ayuntamiento de Puebla",
+    "code": "MUN-PUE-114",
+    "type": "MUNICIPALITY",
+    "state": "Puebla (21)",
+    "municipality": "Heroica Puebla de Zaragoza (114)",
+    "badge": "Gobierno Municipal Autorizado",
+    "crs": "EPSG:32614 (UTM Zona 14N)"
+  },
+  {
+    "id": "org-qro-002",
+    "name": "Municipio de Querétaro",
+    "code": "MUN-QRO-014",
+    "type": "MUNICIPALITY",
+    "state": "Querétaro (22)",
+    "municipality": "Santiago de Querétaro (014)",
+    "badge": "Gobierno Municipal Autorizado",
+    "crs": "EPSG:32614 (UTM Zona 14N)"
+  },
+  {
+    "id": "org-mty-003",
+    "name": "Municipio de Monterrey",
+    "code": "MUN-NL-039",
+    "type": "MUNICIPALITY",
+    "state": "Nuevo León (19)",
+    "municipality": "Monterrey (039)",
+    "badge": "Gobierno Municipal Autorizado",
+    "crs": "EPSG:32614 (UTM Zona 14N)"
+  },
+  {
+    "id": "org-gdl-004",
+    "name": "Municipio de Guadalajara",
+    "code": "MUN-JAL-039",
+    "type": "MUNICIPALITY",
+    "state": "Jalisco (14)",
+    "municipality": "Guadalajara (039)",
+    "badge": "Gobierno Municipal Autorizado",
+    "crs": "EPSG:32613 (UTM Zona 13N)"
+  },
+  {
+    "id": "org-merida-005",
+    "name": "Municipio de Mérida",
+    "code": "MUN-YUC-050",
+    "type": "MUNICIPALITY",
+    "state": "Yucatán (31)",
+    "municipality": "Mérida (050)",
+    "badge": "Gobierno Municipal Autorizado",
+    "crs": "EPSG:32616 (UTM Zona 16N)"
+  },
+  {
+    "id": "org-cuauhtemoc-006",
+    "name": "Alcaldía Cuauhtémoc",
+    "code": "ALC-CDMX-015",
+    "type": "MUNICIPALITY",
+    "state": "Ciudad de México (09)",
+    "municipality": "Cuauhtémoc (015)",
+    "badge": "Alcaldía Territorial Autorizada",
+    "crs": "EPSG:32614 (UTM Zona 14N)"
+  },
+  {
+    "id": "org-mty-dev-007",
+    "name": "Grupo Desarrollador Norte",
+    "code": "DEV-NL-088",
+    "type": "DEVELOPER",
+    "state": "Nuevo León (19)",
+    "municipality": "San Pedro Garza García (019)",
+    "badge": "Desarrolladora Inmobiliaria Certificada",
+    "crs": "EPSG:32614 (UTM Zona 14N)"
+  },
+  {
+    "id": "org-gdl-infra-008",
+    "name": "Constructora Metropolitana Jal.",
+    "code": "CON-JAL-039",
+    "type": "CONSTRUCTION",
+    "state": "Jalisco (14)",
+    "municipality": "Guadalajara (039)",
+    "badge": "Constructora e Infraestructura Autorizada",
+    "crs": "EPSG:32613 (UTM Zona 13N)"
+  }
 ];
 
 export const MOCK_KPIS: KPICardData[] = [
