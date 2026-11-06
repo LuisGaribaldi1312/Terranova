@@ -565,9 +565,11 @@ export const MOCK_PROJECTS: ProjectItem[] = [
 ];
 
 export const MOCK_LAYERS: LayerItem[] = [
-  { id: 'lay-inegi-colonias', name: 'Colonias y Localidades (INEGI)', category: 'Territorio', active: true, count: 184, color: '#38BDF8' },
-  { id: 'lay-inegi-manzanas', name: 'Manzanas Urbanas (MGN)', category: 'Territorio', active: true, count: 4210, color: '#94A3B8' },
-  { id: 'lay-predios', name: 'Predios Catastrales', category: 'Catastro', active: true, count: 42850, color: '#17A987' },
+  { id: 'lay-inegi-estados', name: '32 Estados de México (INEGI)', category: 'Territorio', active: true, count: 32, color: '#38BDF8' },
+  { id: 'lay-inegi-municipios', name: 'Municipios Oficiales (MGN)', category: 'Territorio', active: true, count: 2477, color: '#17A987' },
+  { id: 'lay-inegi-colonias', name: 'Localidades y Colonias', category: 'Territorio', active: true, count: 184, color: '#F59E0B' },
+  { id: 'lay-inegi-manzanas', name: 'Manzanas Urbanas (MGN)', category: 'Territorio', active: false, count: 4210, color: '#94A3B8' },
+  { id: 'lay-predios', name: 'Predios Catastrales', category: 'Catastro', active: true, count: 42850, color: '#10B981' },
   { id: 'lay-alumbrado', name: 'Red de Alumbrado Público', category: 'Infraestructura', active: true, count: 9840, color: '#FACC15' },
   { id: 'lay-agua', name: 'Red Hidráulica y Válvulas', category: 'Infraestructura', active: false, count: 3200, color: '#60A5FA' },
   { id: 'lay-incidencias', name: 'Incidencias Georreferenciadas', category: 'Operación', active: true, count: 38, color: '#EF4444' },

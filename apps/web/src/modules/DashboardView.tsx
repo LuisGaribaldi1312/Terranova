@@ -6,6 +6,7 @@ import {
   Clock, 
   Maximize2
 } from 'lucide-react';
+import { MapLibreMap } from '../maps/MapLibreMap';
 import { KPICardData, PropertyItem, IncidentItem, ProjectItem, LayerItem } from '../types';
 
 interface DashboardViewProps {
@@ -34,7 +35,6 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onNavigateToGIS,
 }) => {
   const [activeTab, setActiveTab] = useState<'incidents' | 'properties' | 'projects'>('incidents');
-  const [activeMarker, setActiveMarker] = useState<string | null>(null);
 
   return (
     <div className="flex-1 overflow-y-auto p-4 space-y-4 gis-grid-bg">
@@ -93,87 +93,19 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
           </div>
 
-          {/* Interactive Vector GIS Simulation Canvas */}
-          <div className="flex-1 relative bg-[#091824] overflow-hidden flex items-center justify-center">
-            {/* Dynamic Simulated Cadastral Grid & Parcels SVG */}
-            <svg className="w-full h-full absolute inset-0 opacity-80 cursor-crosshair">
-              <defs>
-                <pattern id="gridPattern" width="40" height="40" patternUnits="userSpaceOnUse">
-                  <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(23, 169, 135, 0.12)" strokeWidth="1" />
-                </pattern>
-              </defs>
-              <rect width="100%" height="100%" fill="url(#gridPattern)" />
-
-              {/* Simulated Municipal Boundary */}
-              <polygon
-                points="80,40 380,25 720,80 820,320 540,380 180,360 60,220"
-                fill="rgba(18, 60, 80, 0.35)"
-                stroke="#17A987"
-                strokeWidth="2"
-                strokeDasharray="4 2"
-              />
-
-              {/* Simulated Cadastral Parcels (Properties) */}
-              {properties.map((prop, idx) => {
-                const posX = 160 + (idx * 110) % 520;
-                const posY = 90 + (idx * 65) % 260;
-                return (
-                  <g
-                    key={prop.id}
-                    onMouseEnter={() => setActiveMarker(prop.id)}
-                    onMouseLeave={() => setActiveMarker(null)}
-                    onClick={() => onSelectProperty(prop)}
-                    className="cursor-pointer group"
-                  >
-                    <rect
-                      x={posX}
-                      y={posY}
-                      width="85"
-                      height="55"
-                      fill={activeMarker === prop.id ? 'rgba(23, 169, 135, 0.6)' : 'rgba(23, 169, 135, 0.25)'}
-                      stroke="#22C49F"
-                      strokeWidth="1.5"
-                      className="transition-all hover:fill-terranova-500/50"
-                    />
-                    <text
-                      x={posX + 6}
-                      y={posY + 18}
-                      fill="#E9F0F2"
-                      fontSize="9"
-                      fontFamily="monospace"
-                      fontWeight="bold"
-                    >
-                      {prop.cadastralKey.split('-').slice(-2).join('-')}
-                    </text>
-                    <text
-                      x={posX + 6}
-                      y={posY + 32}
-                      fill="#9DB4C0"
-                      fontSize="8"
-                    >
-                      {prop.landArea} m²
-                    </text>
-                  </g>
-                );
-              })}
-
-              {/* Simulated Active Incidents (Pins) */}
-              {incidents.slice(0, 4).map((inc, idx) => {
-                const pinX = 220 + (idx * 135) % 480;
-                const pinY = 140 + (idx * 55) % 220;
-                return (
-                  <g
-                    key={inc.id}
-                    onClick={() => onSelectIncident(inc)}
-                    className="cursor-pointer group animate-bounce"
-                    style={{ animationDuration: `${2 + idx * 0.5}s` }}
-                  >
-                    <circle cx={pinX} cy={pinY} r="7" fill="#EF4444" className="shadow-lg" />
-                    <circle cx={pinX} cy={pinY} r="14" fill="rgba(239, 68, 68, 0.25)" />
-                  </g>
-                );
-              })}
-            </svg>
+          {/* Real WebGL / Raster MapLibre Map Container */}
+          <div className="flex-1 relative bg-[#091824] overflow-hidden">
+            <MapLibreMap
+              baseMap="dark"
+              layers={layers}
+              properties={properties}
+              incidents={incidents}
+              activeTool="pan"
+              onSelectProperty={onSelectProperty}
+              onSelectIncident={onSelectIncident}
+              center={[-98.2062, 19.0438]}
+              zoom={13.0}
+            />
 
             {/* Floating Layers Pill on Map */}
             <div className="absolute bottom-3 left-3 bg-terranova-900/95 backdrop-blur border border-terranova-700/80 rounded-xl p-2 shadow-panel-dark flex items-center gap-1.5 text-xs z-10">
@@ -383,8 +315,6 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 {properties.map((prop) => (
                   <tr
                     key={prop.id}
-                    onMouseEnter={() => setActiveMarker(prop.id)}
-                    onMouseLeave={() => setActiveMarker(null)}
                     onClick={() => onSelectProperty(prop)}
                     className="hover:bg-terranova-800/40 transition-colors cursor-pointer"
                   >

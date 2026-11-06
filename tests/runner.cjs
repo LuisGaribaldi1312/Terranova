@@ -125,6 +125,15 @@ for (const file of files) {
     if (mod === 'vitest') {
       return { describe: global.describe, it: global.it, expect: global.expect };
     }
+    if (mod.includes('mexicoGeoData')) {
+      const geoPath = path.resolve(__dirname, '../apps/web/src/maps/mexicoGeoData.ts');
+      const geoTs = fs.readFileSync(geoPath, 'utf8');
+      const geoJs = ts.transpile(geoTs, { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS });
+      const geoM = { exports: {} };
+      const geoWrap = new Function('require', 'exports', 'module', geoJs);
+      geoWrap(require, geoM.exports, geoM);
+      return geoM.exports;
+    }
     if (mod.includes('spatialMath')) {
       const spPath = path.resolve(__dirname, '../apps/web/src/maps/spatialMath.ts');
       const spTs = fs.readFileSync(spPath, 'utf8');

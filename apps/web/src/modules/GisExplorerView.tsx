@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { 
-  Layers, 
   Ruler, 
   Square, 
   Download, 
@@ -9,10 +8,18 @@ import {
   MousePointer,
   RotateCcw,
   Sparkles,
-  Info
+  Info,
+  Globe,
+  MapPin,
+  Building,
 } from 'lucide-react';
 import { LayerItem, PropertyItem, IncidentItem } from '../types';
 import { MapLibreMap, BaseMapStyle, GisToolMode } from '../maps/MapLibreMap';
+import {
+  MEXICAN_STATES,
+  MEXICAN_MUNICIPALITIES,
+  MEXICAN_LOCALITIES,
+} from '../maps/mexicoGeoData';
 
 interface GisExplorerViewProps {
   layers: LayerItem[];
@@ -37,13 +44,54 @@ export const GisExplorerView: React.FC<GisExplorerViewProps> = ({
   const [activeTool, setActiveTool] = useState<GisToolMode>('pan');
   const [measurementInfo, setMeasurementInfo] = useState<{ type: 'distance' | 'area'; value: string } | null>(null);
 
+  // Jerarquía Territorial INEGI (Marco Geoestadístico Nacional - MGN)
+  const [selectedStateCve, setSelectedStateCve] = useState<string>(''); // Vacío = República Mexicana
+  const [selectedMunCve, setSelectedMunCve] = useState<string>('');
+  const [selectedLocCve, setSelectedLocCve] = useState<string>('');
+
+  const currentState = MEXICAN_STATES.find((s) => s.cve_ent === selectedStateCve);
+  const currentMunicipality = MEXICAN_MUNICIPALITIES.find((m) => m.cve_geo === selectedMunCve);
+  const currentLocality = MEXICAN_LOCALITIES.find((l) => l.cve_geo === selectedLocCve);
+
+  // Filtrado dinámico de municipios por estado
+  const filteredMunicipalities = selectedStateCve
+    ? MEXICAN_MUNICIPALITIES.filter((m) => m.cve_ent === selectedStateCve)
+    : MEXICAN_MUNICIPALITIES;
+
+  // Filtrado dinámico de localidades por estado y municipio
+  const filteredLocalities = MEXICAN_LOCALITIES.filter((l) => {
+    if (selectedStateCve && l.cve_ent !== selectedStateCve) return false;
+    if (selectedMunCve && l.cve_mun !== currentMunicipality?.cve_mun) return false;
+    return true;
+  });
+
   const handleToolSelect = (tool: GisToolMode) => {
     setActiveTool(tool);
     setMeasurementInfo(null);
   };
 
+  const handleResetToRepublic = () => {
+    setSelectedStateCve('');
+    setSelectedMunCve('');
+    setSelectedLocCve('');
+  };
+
+  const handleStateChange = (cve: string) => {
+    setSelectedStateCve(cve);
+    setSelectedMunCve('');
+    setSelectedLocCve('');
+  };
+
+  const handleMunChange = (cveGeo: string) => {
+    setSelectedMunCve(cveGeo);
+    setSelectedLocCve('');
+    const mun = MEXICAN_MUNICIPALITIES.find((m) => m.cve_geo === cveGeo);
+    if (mun && !selectedStateCve) {
+      setSelectedStateCve(mun.cve_ent);
+    }
+  };
+
   const handleDownloadOfflinePackage = () => {
-    // Generar GeoJSON descargable con todas las capas activas para uso sin red
     const geojsonPackage = {
       type: 'FeatureCollection',
       metadata: {
@@ -53,6 +101,7 @@ export const GisExplorerView: React.FC<GisExplorerViewProps> = ({
         exportedAt: new Date().toISOString(),
         totalProperties: properties.length,
         totalIncidents: incidents.length,
+        territorialLevel: selectedStateCve ? `Estado ${selectedStateCve}` : 'República Mexicana',
       },
       features: [
         ...properties.map((p) => ({
@@ -78,7 +127,7 @@ export const GisExplorerView: React.FC<GisExplorerViewProps> = ({
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `terranova-paquete-offline-${new Date().toISOString().slice(0, 10)}.geojson`;
+    a.download = `terranova-paquete-territorial-${new Date().toISOString().slice(0, 10)}.geojson`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -86,26 +135,137 @@ export const GisExplorerView: React.FC<GisExplorerViewProps> = ({
   return (
     <div className="flex-1 flex overflow-hidden relative bg-[#07131B]">
       {/* 1. Left Layer & Cartographic Control Panel */}
-      <div className="w-72 border-r border-terranova-800 bg-terranova-900/95 backdrop-blur-md flex flex-col justify-between z-10 shadow-panel-dark select-none">
+      <div className="w-80 border-r border-terranova-800 bg-terranova-900/95 backdrop-blur-md flex flex-col justify-between z-10 shadow-panel-dark select-none">
+        
+        {/* Cabecera del Gestor */}
         <div className="p-3 border-b border-terranova-800">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-white flex items-center gap-1.5">
-              <Layers className="w-4 h-4 text-terranova-400" />
-              Gestor de Capas GIS
+              <Globe className="w-4 h-4 text-terranova-400" />
+              Navegador Territorial MGN
             </span>
             <span className="text-[10px] font-mono text-terranova-300 px-1.5 py-0.5 rounded bg-terranova-800">
-              {layers.filter((l) => l.active).length} activas
+              32 Estados
             </span>
           </div>
         </div>
 
-        {/* Layer Groups List */}
-        <div className="flex-1 overflow-y-auto p-3 space-y-4 text-xs">
+        {/* Controles de Jerarquía Territorial INEGI */}
+        <div className="flex-1 overflow-y-auto p-3 space-y-3.5 text-xs">
+          
+          {/* Botón de República Mexicana Completa */}
           <div>
-            <span className="text-[10px] font-mono text-terranova-400 uppercase tracking-wider block mb-2">
-              Capas Vectoriales del Territorio
-            </span>
-            <div className="space-y-1.5">
+            <button
+              onClick={handleResetToRepublic}
+              className={`w-full py-2 px-3 rounded-xl text-xs font-mono font-bold flex items-center justify-center gap-2 border transition-all ${
+                !selectedStateCve
+                  ? 'bg-gradient-to-r from-emerald-600 to-teal-500 text-black border-emerald-400 shadow-glow-tech'
+                  : 'bg-terranova-950 border-terranova-800 text-gray-300 hover:text-white hover:border-terranova-600'
+              }`}
+            >
+              <Globe className="w-4 h-4" />
+              <span>🇲🇽 Ver República Mexicana Completa</span>
+            </button>
+          </div>
+
+          {/* Selector de 32 Estados de México */}
+          <div className="p-2.5 rounded-xl bg-terranova-950/70 border border-terranova-800 space-y-1.5">
+            <label className="text-[10px] font-mono text-terranova-400 uppercase tracking-wider block font-bold">
+              1. Entidad Federativa (32 Estados)
+            </label>
+            <select
+              value={selectedStateCve}
+              onChange={(e) => handleStateChange(e.target.value)}
+              className="w-full bg-terranova-900 border border-terranova-700 rounded-lg p-2 text-xs text-white font-mono focus:outline-none focus:border-terranova-400"
+            >
+              <option value="">-- Toda la República Mexicana (32 Estados) --</option>
+              {MEXICAN_STATES.map((st) => (
+                <option key={st.cve_ent} value={st.cve_ent}>
+                  [{st.cve_ent}] {st.name} ({st.municipalityCount} mun.)
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Selector de Municipios de la Entidad */}
+          <div className="p-2.5 rounded-xl bg-terranova-950/70 border border-terranova-800 space-y-1.5">
+            <label className="text-[10px] font-mono text-emerald-400 uppercase tracking-wider block font-bold flex items-center gap-1">
+              <Building className="w-3 h-3" />
+              2. Municipio (Marco Geoestadístico)
+            </label>
+            <select
+              value={selectedMunCve}
+              onChange={(e) => handleMunChange(e.target.value)}
+              className="w-full bg-terranova-900 border border-terranova-700 rounded-lg p-2 text-xs text-white font-mono focus:outline-none focus:border-emerald-400"
+            >
+              <option value="">
+                {selectedStateCve
+                  ? `-- Ver Todos los Municipios de ${currentState?.name || ''} --`
+                  : '-- Selecciona o filtra un Municipio --'}
+              </option>
+              {filteredMunicipalities.map((mun) => (
+                <option key={mun.cve_geo} value={mun.cve_geo}>
+                  [{mun.cve_geo}] {mun.name} ({mun.localityCount} loc.)
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Selector de Localidades Urbanas / Rurales */}
+          <div className="p-2.5 rounded-xl bg-terranova-950/70 border border-terranova-800 space-y-1.5">
+            <label className="text-[10px] font-mono text-sky-400 uppercase tracking-wider block font-bold flex items-center gap-1">
+              <MapPin className="w-3 h-3" />
+              3. Localidad / Colonia (INEGI cve_loc)
+            </label>
+            <select
+              value={selectedLocCve}
+              onChange={(e) => setSelectedLocCve(e.target.value)}
+              className="w-full bg-terranova-900 border border-terranova-700 rounded-lg p-2 text-xs text-white font-mono focus:outline-none focus:border-sky-400"
+            >
+              <option value="">-- Ver Todas las Localidades --</option>
+              {filteredLocalities.map((loc) => (
+                <option key={loc.cve_geo} value={loc.cve_geo}>
+                  [{loc.type}] {loc.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Ficha Rápida del Territorio Activo */}
+          {(currentState || currentMunicipality) && (
+            <div className="p-2.5 rounded-xl bg-terranova-950 border border-emerald-500/40 text-[11px] font-mono space-y-1">
+              <span className="text-[10px] text-emerald-400 font-bold block uppercase tracking-wider">
+                Información del Territorio Enfocado
+              </span>
+              <p className="text-white font-bold">
+                {currentMunicipality ? currentMunicipality.name : currentState?.name}
+              </p>
+              <div className="grid grid-cols-2 gap-1 text-[10px] text-gray-400 pt-1">
+                <span>Población INEGI:</span>
+                <span className="text-white font-bold text-right">
+                  {currentMunicipality
+                    ? currentMunicipality.population.toLocaleString()
+                    : currentState
+                    ? `${currentState.municipalityCount} Municipios`
+                    : '-'}
+                </span>
+                <span>Clave MGN:</span>
+                <span className="text-terranova-400 font-bold text-right">
+                  {currentMunicipality ? currentMunicipality.cve_geo : currentState?.cve_ent}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Gestor de Capas Vectoriales */}
+          <div className="pt-2 border-t border-terranova-800 space-y-1.5">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[10px] font-mono text-terranova-400 uppercase tracking-wider block font-bold">
+                Capas del Sistema ({layers.filter((l) => l.active).length} activas)
+              </span>
+            </div>
+
+            <div className="space-y-1 max-h-48 overflow-y-auto pr-1">
               {layers.map((layer) => (
                 <div
                   key={layer.id}
@@ -139,10 +299,10 @@ export const GisExplorerView: React.FC<GisExplorerViewProps> = ({
             </div>
           </div>
 
-          {/* Base Map Selector */}
+          {/* Selector de Cartografía Base */}
           <div className="pt-2 border-t border-terranova-800">
-            <span className="text-[10px] font-mono text-terranova-400 uppercase tracking-wider block mb-2">
-              Cartografía Base (MapLibre GL JS)
+            <span className="text-[10px] font-mono text-terranova-400 uppercase tracking-wider block mb-2 font-bold">
+              Cartografía Base (Resiliente 100%)
             </span>
             <div className="grid grid-cols-3 gap-1.5">
               {[
@@ -165,34 +325,33 @@ export const GisExplorerView: React.FC<GisExplorerViewProps> = ({
             </div>
           </div>
 
-          {/* Projection Indicator Card */}
+          {/* Proyección Cartográfica Activa */}
           <div className="p-2.5 rounded-lg bg-terranova-950 border border-terranova-800 text-[10px] font-mono text-gray-400 space-y-1">
             <div className="flex items-center gap-1 text-terranova-400 font-bold">
               <Info className="w-3.5 h-3.5" />
-              <span>Proyección Cartográfica Activa</span>
+              <span>Proyección Cartográfica</span>
             </div>
-            <p className="text-white">{crs}</p>
-            <p className="text-[9px] text-gray-500">Cálculos proyectados conforme a estándares INEGI.</p>
+            <p className="text-white font-bold">{crs}</p>
+            <p className="text-[9px] text-gray-500">INEGI MGN / EPSG:6362 ITRF2008 / WGS84</p>
           </div>
         </div>
 
-        {/* Offline Package Export Button */}
+        {/* Botón de Exportación GeoJSON Offline */}
         <div className="p-3 border-t border-terranova-800 bg-terranova-950/60">
           <button
             onClick={handleDownloadOfflinePackage}
-            className="w-full flex items-center justify-center gap-2 py-2 rounded-lg bg-emerald-950 hover:bg-emerald-900 text-emerald-300 font-medium border border-emerald-700/60 text-xs transition-colors shadow-glow-tech"
-            title="Exportar capas en GeoJSON para uso en campo sin conexión"
+            className="w-full py-2 px-3 rounded-lg bg-terranova-800 hover:bg-terranova-700 text-terranova-200 border border-terranova-700 flex items-center justify-center gap-2 text-xs font-mono transition-colors"
           >
-            <Download className="w-3.5 h-3.5" />
-            <span>Descargar Paquete Offline (.geojson)</span>
+            <Download className="w-3.5 h-3.5 text-terranova-400" />
+            <span>Descargar Paquete GeoJSON</span>
           </button>
         </div>
       </div>
 
-      {/* 2. Main GIS Viewport with Real MapLibre Engine */}
-      <div className="flex-1 relative flex items-center justify-center overflow-hidden">
-        {/* Floating Spatial Toolbar */}
-        <div className="absolute top-4 left-4 bg-terranova-900/90 backdrop-blur-md border border-terranova-700 rounded-xl p-1.5 shadow-panel-dark flex items-center gap-1 z-20 select-none">
+      {/* 2. Main Map Viewport */}
+      <div className="flex-1 relative h-full w-full">
+        {/* Floating GIS Tools Bar */}
+        <div className="absolute top-4 left-4 z-20 flex items-center gap-1.5 bg-terranova-900/90 border border-terranova-700 p-1.5 rounded-xl shadow-2xl backdrop-blur-md">
           <button
             onClick={() => handleToolSelect('pan')}
             className={`p-2 rounded-lg text-xs font-mono flex items-center gap-1.5 transition-all ${
@@ -264,7 +423,22 @@ export const GisExplorerView: React.FC<GisExplorerViewProps> = ({
           </div>
         )}
 
-        {/* Real WebGL MapLibre GL JS Map Instance */}
+        {/* Banner Indicador de Vista Territorial Superior */}
+        <div className="absolute top-4 right-14 z-20 hidden md:flex items-center gap-2 bg-terranova-900/90 border border-terranova-700 px-3 py-1.5 rounded-xl shadow-panel-dark backdrop-blur-md text-xs font-mono">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="text-gray-400">Escala:</span>
+          <span className="text-white font-bold">
+            {currentLocality
+              ? `Localidad: ${currentLocality.name}`
+              : currentMunicipality
+              ? `Municipio: ${currentMunicipality.name} (${currentMunicipality.cve_geo})`
+              : currentState
+              ? `Estado: ${currentState.name} (${currentState.cve_ent})`
+              : '🇲🇽 República Mexicana (32 Estados)'}
+          </span>
+        </div>
+
+        {/* Instancia Real de MapLibre GL JS */}
         <MapLibreMap
           baseMap={activeBaseMap}
           layers={layers}
@@ -274,6 +448,19 @@ export const GisExplorerView: React.FC<GisExplorerViewProps> = ({
           onSelectProperty={onSelectProperty}
           onSelectIncident={onSelectIncident}
           onMeasurementUpdate={setMeasurementInfo}
+          selectedStateCve={selectedStateCve}
+          selectedMunCve={selectedMunCve}
+          selectedLocCve={selectedLocCve}
+          onSelectState={(st) => setSelectedStateCve(st.cve_ent)}
+          onSelectMunicipality={(mun) => {
+            setSelectedMunCve(mun.cve_geo);
+            setSelectedStateCve(mun.cve_ent);
+          }}
+          onSelectLocality={(loc) => {
+            setSelectedLocCve(loc.cve_geo);
+            setSelectedMunCve(`${loc.cve_ent}${loc.cve_mun}`);
+            setSelectedStateCve(loc.cve_ent);
+          }}
         />
       </div>
     </div>
